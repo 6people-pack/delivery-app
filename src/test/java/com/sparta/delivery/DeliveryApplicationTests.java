@@ -1,10 +1,10 @@
-package com.sparta.demo1;
+package com.sparta.delivery;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class Demo1ApplicationTests {
+class DeliveryApplicationTests {
 
     @Test
     void contextLoads() {
