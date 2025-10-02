@@ -2,7 +2,7 @@ mode: auto
 silent: false
 branchName: 'chistock-${issue.number}'
 autoCloseIssue: true
-openDraftPR: true
+openDraftPR: false
 copyIssueLabelsToPR: true
 copyIssueAssigneeToPR: true
 
