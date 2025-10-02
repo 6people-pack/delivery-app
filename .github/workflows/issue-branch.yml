@@ -1,28 +1,56 @@
-# .github/issue-branch.yml
+## .github/issue-branch.yml
+#
+#branchName: "chistock-#${issue.number}"
+#autoCloseIssue: true
+#openDraftPR: true
+#copyIssueLabelsToPR: true
+#copyIssueAssigneeToPR: true
+#branches:
+#  - label: 🐛 Bug
+#    prefix: bugfix/
+#  - label: 🩹 Simple Fix
+#    prefix: bugfix/
+#  - label: 🚨 HOTFIX
+#    prefix: hotfix/
+#  - label: 👷 CI
+#    prefix: env/
+#  - label: ⚙️ Setting
+#    prefix: env/
+#  - label: 💄 Design
+#    prefix: feature/
+#  - label: ✨ Feature
+#    prefix: feature/
+#  - label: ♻️ Refactor
+#    prefix: feature/
+#  - label: ✅ Test
+#    prefix: feature/
+#  - label: 📝 Document
+#    prefix: docs/
 
-branchName: "chistock-#${issue.number}"
-autoCloseIssue: true
-openDraftPR: true
-copyIssueLabelsToPR: true
-copyIssueAssigneeToPR: true
-branches:
-  - label: 🐛 Bug
-    prefix: bugfix/
-  - label: 🩹 Simple Fix
-    prefix: bugfix/
-  - label: 🚨 HOTFIX
-    prefix: hotfix/
-  - label: 👷 CI
-    prefix: env/
-  - label: ⚙️ Setting
-    prefix: env/
-  - label: 💄 Design
-    prefix: feature/
-  - label: ✨ Feature
-    prefix: feature/
-  - label: ♻️ Refactor
-    prefix: feature/
-  - label: ✅ Test
-    prefix: feature/
-  - label: 📝 Document
-    prefix: docs/
+name: Create branch from issue
+on:
+  issues:
+    types: [opened]
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Create branch from issue
+        uses: peter-evans/issue-branch@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branchName: "chistock-#${{ github.event.issue.number }}"
+          autoCloseIssue: true
+          openDraftPR: true
+          copyIssueLabelsToPR: true
+          copyIssueAssigneeToPR: true
+          branches: |
+            Bug=bugfix/
+            Simple Fix=bugfix/
+            HOTFIX=hotfix/
