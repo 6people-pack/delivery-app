@@ -1,31 +1,34 @@
-## .github/issue-branch.yml
-
-branchName: "chistock-#${issue.number}"
+mode: auto
+silent: false
+branchName: 'chistock-${issue.number}'
 autoCloseIssue: true
 openDraftPR: true
 copyIssueLabelsToPR: true
 copyIssueAssigneeToPR: true
+
 branches:
-  - label: 🐛 Bug
+  - label: '🐛 Bug'
     prefix: bugfix/
-  - label: 🩹 Simple Fix
+  - label: '🩹 Simple Fix'
     prefix: bugfix/
-  - label: 🚨 HOTFIX
+  - label: '🚨 HOTFIX'
     prefix: hotfix/
-  - label: 👷 CI
+  - label: '👷 CI'
     prefix: env/
-  - label: ⚙️ Setting
+  - label: '⚙️ Setting'
     prefix: env/
-  - label: 💄 Design
+  - label: '💄 Design'
     prefix: feature/
-  - label: ✨ Feature
+  - label: '✨ Feature'
     prefix: feature/
-  - label: ♻️ Refactor
+  - label: '♻️ Refactor'
     prefix: feature/
-  - label: ✅ Test
+  - label: '✅ Test'
     prefix: feature/
-  - label: 📝 Document
+  - label: '📝 Document'
     prefix: docs/
+  - label: '*'
+    prefix: feature/
 
 
 
