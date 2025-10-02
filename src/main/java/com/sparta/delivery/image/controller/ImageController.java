@@ -2,9 +2,9 @@ package com.sparta.delivery.image.controller;
 
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
+import com.sparta.delivery.image.dto.ImageMultiRequestDto;
 import com.sparta.delivery.image.dto.ImageMultiResponseDto;
 import com.sparta.delivery.image.dto.ImageRequestDto;
-import com.sparta.delivery.image.dto.ImageResponseDto;
 import com.sparta.delivery.image.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +29,12 @@ public class ImageController {
     @GetMapping("/{category}")
     public BaseResponse<String> getImage(@PathVariable String category, @RequestBody ImageRequestDto requestDto) {
         return BaseResponse.ok(imageService.getImage(category, requestDto), BaseStatus.OK);
+    }
+
+    //이미지 다건 조회
+    @GetMapping("/all/{category}")
+    public BaseResponse<ImageMultiResponseDto> getAllImage(@PathVariable String category,@RequestBody ImageMultiRequestDto requestDto) {
+        return BaseResponse.ok(imageService.getAllImage(category, requestDto.getCategoryid()), BaseStatus.OK);
     }
 
     //이미지 수정

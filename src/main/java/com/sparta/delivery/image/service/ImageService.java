@@ -1,18 +1,17 @@
 package com.sparta.delivery.image.service;
 
 import com.sparta.delivery.global.exception.BusinessException;
-import com.sparta.delivery.image.dto.ImageMultiResponseDto;
-import com.sparta.delivery.image.dto.ImageRequestDto;
+import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.image.domain.Category;
 import com.sparta.delivery.image.domain.Image;
-import com.sparta.delivery.image.dto.ImageResponseDto;
+import com.sparta.delivery.image.dto.ImageMultiResponseDto;
+import com.sparta.delivery.image.dto.ImageRequestDto;
 import com.sparta.delivery.image.dto.ImageSimpleResponseDto;
 import com.sparta.delivery.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.sparta.delivery.global.exception.domain.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,5 +81,15 @@ public class ImageService {
             img.decreaseIndex();
             imageRepository.save(img);
         }
+    }
+
+    public ImageMultiResponseDto getAllImage(String category, String categoryid) {
+        if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
+        //해당 카테고리의 객체가 있는지 확인
+        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(Category.valueOf(category), UUID.fromString(categoryid));
+        List<ImageSimpleResponseDto> imageList = images.stream()
+                .map(image -> new ImageSimpleResponseDto(image.getId().toString(), image.getIndex()))
+                .toList();
+        return new ImageMultiResponseDto(category, categoryid, imageList);
     }
 }
