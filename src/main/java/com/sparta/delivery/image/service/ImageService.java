@@ -1,10 +1,12 @@
 package com.sparta.delivery.image.service;
 
 import com.sparta.delivery.global.exception.BusinessException;
+import com.sparta.delivery.image.dto.ImageMultiResponseDto;
 import com.sparta.delivery.image.dto.ImageRequestDto;
 import com.sparta.delivery.image.domain.Category;
 import com.sparta.delivery.image.domain.Image;
 import com.sparta.delivery.image.dto.ImageResponseDto;
+import com.sparta.delivery.image.dto.ImageSimpleResponseDto;
 import com.sparta.delivery.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,15 +28,20 @@ public class ImageService {
 
 
     @Transactional
-    public ImageResponseDto uploadImage(String category, String categoryid, MultipartFile file) {
+    public ImageMultiResponseDto uploadImage(String category, String categoryid, List<MultipartFile> files) {
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
         int count = imageRepository.countByCategoryAndCategoryId(Category.valueOf(category),UUID.fromString(categoryid));
-        UUID imageId = UUID.randomUUID();
-        String imageUrl = s3Service.uploadImage(category, categoryid, file, imageId.toString());
-        Image image = new Image(imageId, Category.valueOf(category), UUID.fromString(categoryid), imageUrl, count+1);
-        imageRepository.save(image);
-        return new ImageResponseDto(image);
+        List<ImageSimpleResponseDto> imageList = new ArrayList<>();
+        for(MultipartFile file : files) {
+            UUID imageId = UUID.randomUUID();
+            String imageUrl = s3Service.uploadImage(category, categoryid, file, imageId.toString());
+            Image image = new Image(imageId, Category.valueOf(category), UUID.fromString(categoryid), imageUrl, count+1);
+            imageRepository.save(image);
+            imageList.add(new ImageSimpleResponseDto(imageId.toString(), image.getIndex()));
+            count++;
+        }
+        return new ImageMultiResponseDto(category, categoryid, imageList);
     }
 
     public String getImage(String category, ImageRequestDto requestDto) {
