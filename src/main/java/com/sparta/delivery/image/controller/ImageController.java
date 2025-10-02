@@ -2,12 +2,15 @@ package com.sparta.delivery.image.controller;
 
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
+import com.sparta.delivery.image.dto.ImageMultiResponseDto;
 import com.sparta.delivery.image.dto.ImageRequestDto;
 import com.sparta.delivery.image.dto.ImageResponseDto;
 import com.sparta.delivery.image.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/images")
@@ -16,9 +19,10 @@ public class ImageController {
 
     private final ImageService imageService;
 
+    //이미지 추가(다수 가능)
     @PostMapping("/{category}" )
-    public BaseResponse<ImageResponseDto> uploadImage(@PathVariable String category, @RequestPart("text") String categoryid, @RequestPart("file") MultipartFile file) {
-        return BaseResponse.ok(imageService.uploadImage(category,categoryid, file), BaseStatus.CREATED);
+    public BaseResponse<ImageMultiResponseDto> uploadImage(@RequestPart("files") List<MultipartFile> files, @PathVariable String category, @RequestPart("categoryid") String categoryid) {
+        return BaseResponse.ok(imageService.uploadImage(category,categoryid, files), BaseStatus.CREATED);
     }
 
     //이미지 조회
