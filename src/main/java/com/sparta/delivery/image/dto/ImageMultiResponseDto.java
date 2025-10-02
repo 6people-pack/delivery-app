@@ -1,6 +1,5 @@
 package com.sparta.delivery.image.dto;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import lombok.Getter;
 
 import java.util.List;
