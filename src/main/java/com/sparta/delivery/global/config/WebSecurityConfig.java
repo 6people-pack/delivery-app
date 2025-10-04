@@ -3,11 +3,15 @@ package com.sparta.delivery.global.config;
 import com.sparta.delivery.security.filter.JwtAuthorizationFilter;
 import com.sparta.delivery.security.JwtUtil;
 import com.sparta.delivery.security.userdetails.UserDetailsServiceImpl;
+import com.sparta.delivery.user.domain.User;
+import com.sparta.delivery.user.repository.RefreshTokenRepository;
+import com.sparta.delivery.user.repository.UserRepository;
+import com.sparta.delivery.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,7 +27,8 @@ public class WebSecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
-    private final AuthenticationConfiguration authenticationConfiguration;
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     // 비밀번호 암호화를 위해
     @Bean
@@ -31,24 +36,10 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-//    // ??
-//    @Bean
-//    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-//        return configuration.getAuthenticationManager();
-//    }
-
-//    // jwt 인증(로그인 시)
-//    @Bean
-//    public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-//        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
-//        filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
-//        return filter;
-//    }
-
     // jwt 검증(요청 시 권한 검증)
     @Bean
     public JwtAuthorizationFilter jwtAuthorizationFilter() {
-        return new JwtAuthorizationFilter(jwtUtil, userDetailsService);
+        return new JwtAuthorizationFilter(jwtUtil, userDetailsService, userRepository, refreshTokenRepository);
     }
 
     // security 정책 설정
@@ -69,9 +60,6 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/user/signup", "/api/user/login").permitAll() // 회원가입, 로그인 접근 허용
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
         );
-//        http.authorizeHttpRequests(auth -> auth
-//                .anyRequest().permitAll() // 모든 요청 허용
-//        );
 
 
         // 필터 관리

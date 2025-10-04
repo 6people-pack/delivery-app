@@ -47,6 +47,7 @@ public class UserService {
                 RequestDto.nickname(),
                 RequestDto.phoneNumber()
         );
+
         userRepository.save(user);
     }
 
@@ -71,11 +72,19 @@ public class UserService {
 
         //TODO 이부분 코드 검증이랑 다 추가해야 합니다
 
-        //        //가입된 정보가 일치하고 db에 refreshToken이 DB에 존재하고 있어야 하고 만약 기간 만료 시 재발급
-//        // DB 조회
-//        Optional<RefreshToken> dbRefreshToken = refreshTokenRepository.findRefreshTokenByUser(user);
-//        // DB에 리프레시 토큰이 있다면 삭제
-//        dbRefreshToken.ifPresent(refreshTokenRepository::delete);
+        issueAndSetAccessToken(response, user.getEmail());
+        issueAndSetRefreshToken(response, user);
+
+
+    }
+
+    public void issueAndSetAccessToken(HttpServletResponse response, String email) {
+
+        String accessToken = jwtUtil.issueAccessToken(email);   // accessToken 발급
+        response.setHeader("Authorization", accessToken); // accessToken은 헤더에 저장
+    }
+
+    public void issueAndSetRefreshToken(HttpServletResponse response, User user) {
 
         refreshTokenRepository.deleteByUser(user); // db에 리프레시 토큰 있으면 삭제
 
@@ -92,23 +101,25 @@ public class UserService {
                         .build()
         );
 
-        String accessToken = jwtUtil.issueAccessToken(user.getEmail());
-
         Duration ttlTime = Duration.between(
                 Instant.now(),
                 exp.toInstant()
         );
 
-
-        // accessToken은 헤더에 저장하고
-        response.setHeader("Authorization", accessToken);
         // refreshToken은 http only 쿠키 방식으로 클라이언트에게 줌, ttlTime만큼 시간이 경과하면 삭제됨 ->이러면 db나 토큰에 만료 시간 설정 없어도 되나
         CookieUtils.setRefreshTokenCookie(response, refreshToken, ttlTime);
+    }
 
+    public void validateRefreshToken(String refreshToken, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // DB의 리프레시 토큰과 비교
+        RefreshToken dbToken = refreshTokenRepository.findRefreshTokenByUser(user)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_JWT_TOKEN));
+        if (!dbToken.getRefreshToken().equals(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+        }
     }
 
 }
-
-
-
-

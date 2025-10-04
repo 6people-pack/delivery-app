@@ -1,10 +1,6 @@
 package com.sparta.delivery.user.dto;
 
-import com.sparta.delivery.user.domain.Role;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 // Up 부분 대문자 아닌데 파일명 고치기가 안됨..
