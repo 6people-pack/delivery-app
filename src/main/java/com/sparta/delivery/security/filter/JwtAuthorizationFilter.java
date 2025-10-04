@@ -5,21 +5,17 @@ import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.global.unit.utils.CookieUtils;
 import com.sparta.delivery.security.JwtUtil;
 import com.sparta.delivery.security.userdetails.UserDetailsServiceImpl;
+import com.sparta.delivery.user.domain.RefreshToken;
 import com.sparta.delivery.user.domain.User;
+import com.sparta.delivery.user.repository.RefreshTokenRepository;
 import com.sparta.delivery.user.repository.UserRepository;
-import com.sparta.delivery.user.service.UserService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.SignatureException;
+import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -35,10 +31,14 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public JwtAuthorizationFilter(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService) {
+    public JwtAuthorizationFilter(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService,  UserRepository userRepository, RefreshTokenRepository refreshTokenRepository) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
@@ -50,36 +50,38 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         // 헤더에서 엑세스토큰 가져옴
         String accessToken = jwtUtil.getJwtFromHeader(req);
-        if (StringUtils.hasText(accessToken)) { // 토큰이 null이거나 공백이 아니라면 true(=토큰이 있다면)
-                        Claims info = jwtUtil.getUserInfoFromToken(accessToken);
+        if (StringUtils.hasText(accessToken)) { // 공백이 아닌 문자열이 있으면 true(= 토큰이 있다면)
 
-            // 검증 및 엑세스토큰 재발급
             try {
-                jwtUtil.validateToken(accessToken);
+                Claims info = jwtUtil.getUserInfoFromToken(accessToken); // 파싱 및 검증
+                setAuthentication(info.getSubject());                    // 인증 진행, getSubject() = email
 
             } catch (ExpiredJwtException e) { //엑세스 토큰 만료
+                String email = e.getClaims().getSubject();
                 String refreshToken = CookieUtils.getRefreshTokenCookie(req); // 쿠키에서 리프레시 토큰 가져옴
-                if (!StringUtils.hasText(refreshToken)) { // 리프레시 토큰 없으면 재로그인 요청
-                    throw new BusinessException(ErrorCode.REFRESH_TOKEN_EXPIRED);
-                }
-                jwtUtil.issueAccessToken(info.getSubject()); //리프레시 토큰 있으면 엑세스토큰 재발급, getSubject() = email
+                jwtUtil.validateToken(refreshToken);                    // 갖고있는 리프레시 jwt토큰 자체를 검증
 
-            } catch (MalformedJwtException | SecurityException | SignatureException e) {
+//                userService.validateRefreshToken(refreshToken, email);   // db에 있는 토큰과 동일한 토큰인지 검증
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+                RefreshToken dbToken = refreshTokenRepository.findRefreshTokenByUser(user)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_JWT_TOKEN));
+                if (!dbToken.getRefreshToken().equals(refreshToken)) {
+                    throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+                }
+
+//                userService.issueAndSetAccessToken(res, email);
+                String newAccessToken = jwtUtil.issueAccessToken(email);   // accessToken 발급
+                res.setHeader("Authorization", newAccessToken);      // accessToken은 헤더에 저장
+
+                setAuthentication(email);
+
+            } catch (JwtException e) {
                 log.error("Invalid JWT signature, 유효하지 않는 JWT 서명입니다.");
                 throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN); // 401
-
-            } catch (UnsupportedJwtException e) {
-                log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰입니다.");
-                throw new BusinessException(ErrorCode.UNSUPPORTED_JWT_TOKEN); // 401
-
             }
 
-//        Claims info = jwtUtil.getUserInfoFromToken(accessToken);
-            try {
-                setAuthentication(info.getSubject()); // 인증 처리 getSubject() = email = userDetails의 username
-            } catch (Exception e) {
-                log.error(e.getMessage());
-            }
         }
 
         // 토큰이 없으면 바로 다음 필터(=인증 절차 건너뛰기)

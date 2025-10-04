@@ -1,5 +1,7 @@
 package com.sparta.delivery.security;
 
+import com.sparta.delivery.global.exception.BusinessException;
+import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.user.dto.RefreshTokenDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -22,9 +24,11 @@ public class JwtUtil {
     // accessToken 식별자
     public static final String BEARER_PREFIX = "Bearer ";
     // 엑세스 토큰 만료시간 application.yml참조로 바꾸기
-    private final long ACCESS_TOKEN_TIME = 1 * 60 * 1000L; // 1분
+    @Value("${jwt.expiration.accesstoken}")
+    private long ACCESS_TOKEN_TIME;
     // 리프레시 토큰 만료시간
-    private final long REFRESH_TOKEN_TIME = 2 * 60 * 1000L; // 2분
+    @Value("${jwt.expiration.refreshtoken}")
+    private long REFRESH_TOKEN_TIME;
 
     @Value("${jwt.secret.key}") // Base64 Encode 한 SecretKey
     private String secretKey;
@@ -77,12 +81,15 @@ public class JwtUtil {
 
     // 토큰 검증
     public void validateToken(String token) {
-        Jwts.parserBuilder() //파싱하는 과정에서 유효성 검증에 실패하면 자동으로 예외가 발생함
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
-
-
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token); //파싱하는 과정에서 유효성 검증에 실패하면 자동으로 예외가 발생함
+        } catch (JwtException e) {
+            log.error("Invalid JWT signature, 유효하지 않는 JWT 서명입니다.");
+            throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN); // 401
+        }
     }
 
     // 토큰에서 사용자 정보 가져오기
