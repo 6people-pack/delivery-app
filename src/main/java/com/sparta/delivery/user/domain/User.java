@@ -32,8 +32,6 @@ public class User extends BaseEntity {
 
     private String phoneNumber;
 
-
-    @Builder
     public User(String email, String password, String nickname, String phoneNumber) {
         this.email = email;
         this.password = password;
@@ -41,18 +39,6 @@ public class User extends BaseEntity {
         this.phoneNumber = phoneNumber;
         this.role = Role.CUSTOMER;
     }
-
-    // 정적 팩토리 메서드
-    public static User create(String email, String password, String nickname, String phoneNumber) {
-        User user = new User();
-        user.email = email;
-        user.password = password;
-        user.nickname = nickname;
-        user.phoneNumber = phoneNumber;
-        user.role = Role.CUSTOMER; // 디폴트 권한은 고객
-        return user;
-    }
-
 
     // 닉네임 변경 메서드
     public void updateNickname(String nickname) {

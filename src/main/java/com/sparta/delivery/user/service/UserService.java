@@ -39,9 +39,8 @@ public class UserService {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);  //409
         }
 
-//        // 확장성 생각하면 유저 엔티티 생성 추적이 힘들어질 가능성이 높아서, builder 말고 파라미터 많아도 user.create()로 하는게 나을 수 있다
-//        User user = UserMapper.toUser(RequestDto, passwordEncoder);
-        User user = User.create(
+//        // 확장성 생각하면 유저 엔티티 생성 추적이 힘들어질 가능성이 높아서, builder 말고 파라미터 많아도 정적 팩토리 메서드나 생성자로 하는게 나을 수 있다
+        User user = new User(
                 RequestDto.email(),
                 passwordEncoder.encode(RequestDto.password()),
                 RequestDto.nickname(),
@@ -110,16 +109,5 @@ public class UserService {
         CookieUtils.setRefreshTokenCookie(response, refreshToken, ttlTime);
     }
 
-    public void validateRefreshToken(String refreshToken, String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        // DB의 리프레시 토큰과 비교
-        RefreshToken dbToken = refreshTokenRepository.findRefreshTokenByUser(user)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_JWT_TOKEN));
-        if (!dbToken.getRefreshToken().equals(refreshToken)) {
-            throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
-        }
-    }
 
 }
