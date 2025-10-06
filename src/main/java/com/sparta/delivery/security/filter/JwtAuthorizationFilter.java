@@ -61,7 +61,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 String refreshToken = CookieUtils.getRefreshTokenCookie(req); // 쿠키에서 리프레시 토큰 가져옴
                 jwtUtil.validateToken(refreshToken);                    // 갖고있는 리프레시 jwt토큰 자체를 검증
 
-//                userService.validateRefreshToken(refreshToken, email);   // db에 있는 토큰과 동일한 토큰인지 검증
+                // db에 있는 토큰과 동일한 토큰인지 검증
                 User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
