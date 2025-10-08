@@ -9,6 +9,7 @@ import com.sparta.delivery.image.dto.ImageRequestDto;
 import com.sparta.delivery.image.dto.ImageSimpleResponseDto;
 import com.sparta.delivery.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,6 +28,7 @@ public class ImageService {
 
 
 
+    //이미지 업로드(다수 가능)
     @Transactional
     public ImageMultiResponseDto uploadImage(String category, String categoryid, List<MultipartFile> files) {
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
@@ -43,6 +46,7 @@ public class ImageService {
         return new ImageMultiResponseDto(category, categoryid, imageList);
     }
 
+    //이미지 단건 조회
     public String getImage(String category, ImageRequestDto requestDto) {
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
@@ -51,19 +55,30 @@ public class ImageService {
         return image.getUrl();
     }
 
+    //이미지 다건 조회
+    public ImageMultiResponseDto getAllImage(String category, String categoryid) {
+        if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
+        //해당 카테고리의 객체가 있는지 확인
+        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(Category.valueOf(category), UUID.fromString(categoryid));
+        List<ImageSimpleResponseDto> imageList = images.stream()
+                .map(image -> new ImageSimpleResponseDto(image.getId().toString(), image.getIndex()))
+                .toList();
+        return new ImageMultiResponseDto(category, categoryid, imageList);
+    }
+
     // 이미지 수정 : 기존의 이미지를 지우고 다른 이미지 생성
-//    @Transactional
-//    public String updateImage(String category, ImageRequestDto requestDto , MultipartFile file) {
-//        if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
-//        // 해당 카테고리의 객체가 있는지 확인
-//        Image image = imageRepository.findByCategoryAndCategoryIdAndIndex(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex())
-//                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
-//        image.changeindex();
-//        String imageUrl = s3Service.uploadImage(category, requestDto.getCategoryid(), file);
-//        Image newImage = new Image(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), imageUrl, requestDto.getIndex());
-//        imageRepository.save(newImage);
-//        return imageUrl;
-//    }
+    @Transactional
+    public String updateImage(String category, ImageRequestDto requestDto , MultipartFile file) {
+        if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
+        // 해당 카테고리의 객체가 있는지 확인
+        Image image = imageRepository.findByCategoryAndCategoryIdAndIndex(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex())
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+
+        s3Service.deleteImage(image.getUrl());
+        String imageUrl = s3Service.uploadImage(category, requestDto.getCategoryid(), file, image.getId().toString());
+        log.info("Updated image URL: {}", imageUrl);
+        return imageUrl;
+    }
 
     //이미지 삭제
     @Transactional
@@ -83,13 +98,4 @@ public class ImageService {
         }
     }
 
-    public ImageMultiResponseDto getAllImage(String category, String categoryid) {
-        if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
-        //해당 카테고리의 객체가 있는지 확인
-        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(Category.valueOf(category), UUID.fromString(categoryid));
-        List<ImageSimpleResponseDto> imageList = images.stream()
-                .map(image -> new ImageSimpleResponseDto(image.getId().toString(), image.getIndex()))
-                .toList();
-        return new ImageMultiResponseDto(category, categoryid, imageList);
-    }
 }
