@@ -37,13 +37,13 @@ public class ImageController {
         return BaseResponse.ok(imageService.getAllImage(category, requestDto.getCategoryid()), BaseStatus.OK);
     }
 
-    //이미지 수정
-//    @PutMapping(path = "/{category}",consumes = "multipart/form-data")
-//    public BaseResponse<String> updateImage(@PathVariable String category,
-//                                              @RequestPart("file") MultipartFile file,
-//                                              @RequestPart("request") ImageRequestDto requestDto) {
-//        return BaseResponse.ok(imageService.updateImage(category, requestDto, file), BaseStatus.OK);
-//    }
+    //이미지 단건 수정
+    @PutMapping(path = "/{category}",consumes = "multipart/form-data")
+    public BaseResponse<String> updateImage(@PathVariable String category,
+                                              @RequestPart("file") MultipartFile file,
+                                              @RequestPart("request") ImageRequestDto requestDto) {
+        return BaseResponse.ok(imageService.updateImage(category, requestDto, file), BaseStatus.OK);
+    }
 
     //이미지 삭제
     @DeleteMapping("/{category}")
