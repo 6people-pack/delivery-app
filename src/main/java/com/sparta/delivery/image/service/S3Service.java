@@ -1,18 +1,23 @@
 package com.sparta.delivery.image.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.*;
 import com.sparta.delivery.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class S3Service {
 
     private final AmazonS3 amazonS3Client;
@@ -41,5 +46,27 @@ public class S3Service {
         }catch (Exception e) {
             throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
         }
+    }
+
+    public void deleteFolder(String category, String categoryId) {
+        String prefix = category + "/" + categoryId + "/";
+
+        // S3에서 해당 폴더의 객체들을 모두 가져옵니다.
+        List<KeyVersion> objectsToDelete = new ArrayList<>();
+        ListObjectsV2Result result = amazonS3Client.listObjectsV2(bucket, prefix);
+
+        for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+            objectsToDelete.add(new KeyVersion(objectSummary.getKey()));
+        }
+
+        //객체가 없는 경우 예외 처리
+        if(objectsToDelete.isEmpty()) throw new BusinessException(ErrorCode.S3_FOLDER_NO_FILE);
+
+        // 객체가 있는 경우에만 일괄 삭제를 실행합니다.
+        DeleteObjectsRequest request = new DeleteObjectsRequest(bucket)
+                .withKeys(objectsToDelete);
+        DeleteObjectsResult deleteObjectsResult = amazonS3Client.deleteObjects(request);
+        // 삭제 결과 확인 (필요한 경우)
+        log.info("Deleted objects: " + prefix + " , size : " + deleteObjectsResult.getDeletedObjects().size());
     }
 }

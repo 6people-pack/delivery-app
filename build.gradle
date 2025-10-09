@@ -40,7 +40,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     //S3
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.300' // 최신 버전
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.772'
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 }
 

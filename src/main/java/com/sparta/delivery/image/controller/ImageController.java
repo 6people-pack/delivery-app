@@ -57,4 +57,11 @@ public class ImageController {
         imageService.deleteImage(category, requestDto);
         return BaseResponse.ok(BaseStatus.OK);
     }
+
+    //이미지 다건 삭제
+    @DeleteMapping("/all/{category}")
+    public BaseResponse<Void> deleteAllImage(@PathVariable String category, @RequestBody ImageMultiRequestDto requestDto) {
+        imageService.deleteAllImage(category, requestDto.getCategoryid());
+        return BaseResponse.ok(BaseStatus.OK);
+    }
 }
