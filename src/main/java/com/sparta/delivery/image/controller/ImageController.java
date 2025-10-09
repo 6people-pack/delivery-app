@@ -2,9 +2,7 @@ package com.sparta.delivery.image.controller;
 
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
-import com.sparta.delivery.image.dto.ImageMultiRequestDto;
-import com.sparta.delivery.image.dto.ImageMultiResponseDto;
-import com.sparta.delivery.image.dto.ImageRequestDto;
+import com.sparta.delivery.image.dto.*;
 import com.sparta.delivery.image.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +30,7 @@ public class ImageController {
     }
 
     //이미지 다건 조회
+    //해당 카테고리의 이미지가 없을시 기본 이미지 반환
     @GetMapping("/all/{category}")
     public BaseResponse<ImageMultiResponseDto> getAllImage(@PathVariable String category,@RequestBody ImageMultiRequestDto requestDto) {
         return BaseResponse.ok(imageService.getAllImage(category, requestDto.getCategoryid()), BaseStatus.OK);
@@ -44,6 +43,13 @@ public class ImageController {
                                               @RequestPart("request") ImageRequestDto requestDto) {
         return BaseResponse.ok(imageService.updateImage(category, requestDto, file), BaseStatus.OK);
     }
+
+    //이미지 인덱스 바꿈
+    @PutMapping("/{category}/index")
+    public BaseResponse<ImageResponseDto> changeImageIndex(@PathVariable String category, @RequestBody ImageIndexRequestDto requestDto) {
+        return BaseResponse.ok(imageService.changeImageIndex(category, requestDto),BaseStatus.OK);
+    }
+
 
     //이미지 삭제
     @DeleteMapping("/{category}")

@@ -12,4 +12,6 @@ public interface ImageRepository extends JpaRepository<Image, UUID> {
     Optional<Image> findByCategoryAndCategoryIdAndIndex(Category category, UUID uuid, int index);
     List<Image> findAllByCategoryAndCategoryIdOrderByIndexAsc(Category category, UUID uuid);
      int countByCategoryAndCategoryId(Category category, UUID categoryId);
+
+     List<Image> findAllByCategoryAndCategoryIdAndIndexBetween(Category category, UUID categoryId, int startIndex, int endIndex);
 }

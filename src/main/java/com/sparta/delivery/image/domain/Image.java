@@ -38,11 +38,15 @@ public class Image {
     }
 
 
-    public void changeindex() {
-        this.index = 999;
+    public void updateIndex(int newIndex) {
+        this.index = newIndex;
+    }
+
+    public void increaseIndex() {
+        this.index ++;
     }
 
     public void decreaseIndex() {
-        this.index -= 1;
+        this.index --;
     }
 }

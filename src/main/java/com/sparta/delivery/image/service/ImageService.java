@@ -4,9 +4,7 @@ import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.image.domain.Category;
 import com.sparta.delivery.image.domain.Image;
-import com.sparta.delivery.image.dto.ImageMultiResponseDto;
-import com.sparta.delivery.image.dto.ImageRequestDto;
-import com.sparta.delivery.image.dto.ImageSimpleResponseDto;
+import com.sparta.delivery.image.dto.*;
 import com.sparta.delivery.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +76,30 @@ public class ImageService {
         String imageUrl = s3Service.uploadImage(category, requestDto.getCategoryid(), file, image.getId().toString());
         log.info("Updated image URL: {}", imageUrl);
         return imageUrl;
+    }
+
+    //이미지 순서 조정(인덱스 변경)
+    @Transactional
+    public ImageResponseDto changeImageIndex(String category, ImageIndexRequestDto requestDto) {
+        if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
+        // 해당 카테고리의 객체가 있는지 확인
+        Image image = imageRepository.findByCategoryAndCategoryIdAndIndex(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex())
+                .orElseThrow(()->new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+        //변경할 인덱스가 기존의 인덱스와 같은지 확인
+        if(requestDto.getNewIndex()==requestDto.getIndex())throw new BusinessException(ErrorCode.IMAGE_SAME_INDEX);
+        //현재 인덱스가 변경할 인덱스보다 클때 - 사진을 앞으로 이동
+        else if(requestDto.getIndex() > requestDto.getNewIndex()) {
+            List<Image> images = imageRepository.findAllByCategoryAndCategoryIdAndIndexBetween(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getNewIndex(), requestDto.getIndex()-1);
+            images.forEach(Image::increaseIndex);
+            image.updateIndex(requestDto.getNewIndex());
+        }
+        //현재 인덱스가 변경할 인덱스보다 작을때 - 사진을 뒤로 이동
+        else {
+            List<Image> images = imageRepository.findAllByCategoryAndCategoryIdAndIndexBetween(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex()+1, requestDto.getNewIndex());
+            images.forEach(Image::decreaseIndex);
+            image.updateIndex(requestDto.getNewIndex());
+        }
+        return new ImageResponseDto(image);
     }
 
     //이미지 삭제
