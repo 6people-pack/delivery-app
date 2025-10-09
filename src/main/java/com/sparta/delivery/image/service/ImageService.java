@@ -111,13 +111,8 @@ public class ImageService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
         s3Service.deleteImage(image.getUrl());
         imageRepository.delete(image);
-        int index = requestDto.getIndex();
-        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()));
-        for(int i = index-1; i < images.size(); i++){
-            Image img = images.get(i);
-            img.decreaseIndex();
-            imageRepository.save(img);
-        }
+        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdAndIndexAfter(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex());
+        images.forEach(Image::decreaseIndex);
     }
 
 }
