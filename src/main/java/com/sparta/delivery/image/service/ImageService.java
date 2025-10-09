@@ -115,4 +115,18 @@ public class ImageService {
         images.forEach(Image::decreaseIndex);
     }
 
+    //이미지 다건 삭제
+    @Transactional
+    public void deleteAllImage(String category, String categoryid) {
+        if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
+        // 해당 카테고리의 객체가 있는지 확인
+
+        //해당 카테고리에 이미지가 하나도 없을시 에러 반환
+        if(imageRepository.countByCategoryAndCategoryId(Category.valueOf(category), UUID.fromString(categoryid))==0)
+            throw new BusinessException(ErrorCode.IMAGE_NOT_FOUND);
+
+        //해당 카테고리의 이미지를 데이터와 s3에서 모두 삭제
+        imageRepository.deleteAllByCategoryAndCategoryId(Category.valueOf(category), UUID.fromString(categoryid));
+        s3Service.deleteFolder(category, categoryid);
+    }
 }
