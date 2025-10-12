@@ -1,10 +1,11 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO}
@@ -21,3 +22,6 @@ server:
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}
+  expiration:
+    access-token: ${JWT_EXPIRATION_ACCESSTOKEN}
+    refresh-token: ${JWT_EXPIRATION_REFRESHTOKEN}
