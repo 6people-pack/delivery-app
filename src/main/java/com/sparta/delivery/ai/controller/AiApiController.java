@@ -9,12 +9,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/ai")
+@RequestMapping("/api/chats")
 @RequiredArgsConstructor
 public class AiApiController {
     private final AiApiService aiApiService;
 
-    @PostMapping("/question")
+    @PostMapping
     public BaseResponse<AiResponseDto> askQuestion (@RequestBody AiRequestDto requestDto) {
         return BaseResponse.ok(aiApiService.getAnswerFromAi(requestDto.getQuestion()), BaseStatus.OK);
     }
