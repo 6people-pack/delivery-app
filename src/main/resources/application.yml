@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -18,6 +20,16 @@ spring:
 server:
   port: ${PORT}
 
+
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+  client-key: ${TOSS_CLIENT_KEY}
+
+discord:
+  bot:
+    token: ${DISCORD_BOT_TOKEN}
+    channel: ${DISCORD_CHANNEL_ID}
