@@ -65,12 +65,12 @@ public class Menu {
 
     //PATCH 요청에서 null이 아닌 필드만 바꾸는 부분 수정 메서드
     public void update(String name, String description, Integer price, Integer discountPrice, String option, MenuStatus status) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.discountPrice = discountPrice;
-        this.option = option;
-        this.status = status;
+        if (name != null) this.name = name;
+        if (description != null) this.description = description;
+        if (price != null) this.price = price;
+        if (discountPrice != null) this.discountPrice = discountPrice;
+        if (option != null) this.option = option;
+        if (status != null) this.status = status;
     }
 
     public void setRestaurant(Restaurant restaurant) {
