@@ -1,8 +1,8 @@
-package com.sparta.delivery.tosspay.config;
+package com.sparta.delivery.payment.config;
 
 
-import com.sparta.delivery.tosspay.dto.TossPaymentConfirmRequest;
-import com.sparta.delivery.tosspay.dto.TossPaymentConfirmResponse;
+import com.sparta.delivery.payment.dto.TossPaymentConfirmRequest;
+import com.sparta.delivery.payment.dto.TossPaymentConfirmResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -2,12 +2,15 @@ package com.sparta.delivery.inquiry.message;
 
 
 import com.sparta.delivery.discord.message.DiscordEmbeddable;
+import com.sparta.delivery.user.domain.User;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class InquiryMessage implements DiscordEmbeddable {
+
+    private final User user;
     private final String title;
     private final String content;
 
@@ -28,10 +31,9 @@ public class InquiryMessage implements DiscordEmbeddable {
         Map<String, String> fields = new LinkedHashMap<>();
 
         String userInfo = """
-        **사용자 이름:** %s
         **사용자 닉네임:** %s
         
-        """.formatted(user.getName(), user.getNickname());
+        """.formatted(user.getNickname());   // TODO   """.formatted(user.getName(), user.getNickname()); 본명 필요해 보임
         fields.put("• 문의자 정보", userInfo);
         fields.put("\u200B", "\u200B");
         fields.put("• 문의 제목", title);

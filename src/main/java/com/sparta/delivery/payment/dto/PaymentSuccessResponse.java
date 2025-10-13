@@ -1,4 +1,4 @@
-package com.sparta.delivery.tosspay.dto;
+package com.sparta.delivery.payment.dto;
 
 import lombok.Builder;
 

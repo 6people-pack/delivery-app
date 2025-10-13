@@ -5,14 +5,10 @@ import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.dto.InquiryCreateRequestDto;
 import com.sparta.delivery.inquiry.dto.InquiryItem;
 import com.sparta.delivery.inquiry.dto.InquiryOneGetResponseDto;
+import com.sparta.delivery.user.domain.User;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import shop.matjalalzz.inquiry.dto.InquiryCreateRequest;
-import shop.matjalalzz.inquiry.dto.InquiryItem;
-import shop.matjalalzz.inquiry.dto.InquiryOneGetResponse;
-import shop.matjalalzz.inquiry.entity.Inquiry;
-import shop.matjalalzz.user.entity.User;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InquiryMapper {
@@ -24,8 +20,8 @@ public class InquiryMapper {
             .build();
     }
 
-    public static InquiryOneGetResponseDto fromInquiry(Inquiry inquiry, List<String> images) {
-        return new InquiryOneGetResponseDto(inquiry.getTitle(), inquiry.getContent(), images);
+    public static InquiryOneGetResponseDto fromInquiry(Inquiry inquiry) {
+        return new InquiryOneGetResponseDto(inquiry.getTitle(), inquiry.getContent());
     }
 
     public static InquiryItem fromInquiryItem(Inquiry inquiry, int answerCount) {

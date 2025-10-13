@@ -31,6 +31,7 @@
   // === 환경 설정 (요청대로 문서 데모 키 사용) ===
   const clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
   const backendConfirmEndpoint = '/api/payments/confirm';
+  const backendFailEndpoint = '/api/payments/fail';
 
   // 공통 유틸
   function $(id) { return document.getElementById(id); }
@@ -77,8 +78,8 @@
             orderId,
             orderName: '포인트 충전',
             customerName: '사용자',
-            successUrl: pageUrl({ flow: 'success' }),
-            failUrl: pageUrl({ flow: 'fail' })
+            successUrl: 'http://localhost:8080/toss.html?flow=success',
+            failUrl: 'http://localhost:8080/toss.html?flow=fail'
           });
         } catch (e1) {
           await tossPayments.requestPayment('카드', {
@@ -105,13 +106,25 @@
 
       const paymentKey = qs.get('paymentKey');
       const orderId = qs.get('orderId');
-      const amount = Number(qs.get('amount'));
+      const amount = Number(qs.get('amount')||0);
 
       if (flow === 'fail') {
         const code = qs.get('code');
         const message = qs.get('message');
         $('msg').textContent = '결제 실패';
         log({ step: 'fail', code, message, orderId, amount });
+
+         // 실패 로그 서버로 전송 (한 번만)
+        try {
+            await fetch(backendFailEndpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId, amount, code, message })
+             });
+           } catch (e) {
+             console.warn('fail log send error:', e);
+        }
+
         return;
       }
 

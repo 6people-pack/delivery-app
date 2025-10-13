@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableJpaAuditing
-@EnableFeignClients(basePackages = "com.sparta.delivery.tosspay") // TossApiClient 있는 패키지
+@EnableFeignClients(basePackages = "com.sparta.delivery.payment") // TossApiClient 있는 패키지
 
 public class DeliveryApplication {
 

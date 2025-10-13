@@ -1,4 +1,4 @@
-package com.sparta.delivery.tosspay.dto;
+package com.sparta.delivery.payment.dto;
 
 /**
  * @param status  결제 상태 "DONE" */

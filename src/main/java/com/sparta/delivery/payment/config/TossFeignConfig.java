@@ -1,4 +1,4 @@
-package com.sparta.delivery.tosspay.config;
+package com.sparta.delivery.payment.config;
 
 import feign.Request;
 import feign.RequestInterceptor;

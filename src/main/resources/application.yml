@@ -20,10 +20,12 @@ spring:
 server:
   port: ${PORT}
 
-
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}
+  expiration:
+    access-token: ${JWT_EXPIRATION_ACCESSTOKEN}
+    refresh-token: ${JWT_EXPIRATION_REFRESHTOKEN}
 
 toss:
   secret-key: ${TOSS_SECRET_KEY}

@@ -1,9 +1,8 @@
 package com.sparta.delivery.inquiry.event;
 
 import com.sparta.delivery.inquiry.domain.Inquiry;
+import com.sparta.delivery.user.domain.User;
 import lombok.Getter;
-import shop.matjalalzz.inquiry.entity.Inquiry;
-import shop.matjalalzz.user.entity.User;
 
 @Getter
 public class InquiryCreateEvent {

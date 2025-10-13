@@ -6,6 +6,7 @@ import com.sparta.delivery.inquiry.dto.InquiryAllGetResponseDto;
 import com.sparta.delivery.inquiry.dto.InquiryCreateRequestDto;
 import com.sparta.delivery.inquiry.dto.InquiryOneGetResponseDto;
 import com.sparta.delivery.inquiry.service.InquiryService;
+import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,9 +28,9 @@ public class InquiryController {
 
         @ResponseStatus(HttpStatus.CREATED)
         @PostMapping("/inquiry")
-        public void newInquiry(@AuthenticationPrincipal PrincipalUser principal,
-            @RequestBody @Valid InquiryCreateRequestDto request) {
-            return BaseResponse.ok(inquiryService.createNewInquiry(principal.getId(), request), BaseStatus.OK);
+        public BaseResponse<Void> newInquiry(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody @Valid InquiryCreateRequestDto request) {
+                inquiryService.createNewInquiry(userDetails.getUser().getId(), request);
+                return BaseResponse.ok(BaseStatus.OK);
         }
 
 
@@ -45,9 +46,9 @@ public class InquiryController {
 
         @ResponseStatus(HttpStatus.OK)
         @GetMapping("/inquiry/{inquiryId}")
-        public BaseResponse<InquiryOneGetResponseDto> getOneInquiry(@AuthenticationPrincipal PrincipalUser principal,
+        public BaseResponse<InquiryOneGetResponseDto> getOneInquiry(@AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long inquiryId) {
-            return BaseResponse.ok(inquiryService.getOneInquiry(principal.getId(), inquiryId), BaseStatus.OK);
+            return BaseResponse.ok(inquiryService.getOneInquiry(userDetails.getUser().getId(), inquiryId), BaseStatus.OK);
         }
 
 }

@@ -3,6 +3,7 @@ package com.sparta.delivery.discord.api;
 
 import com.sparta.delivery.discord.message.DiscordMessageConverter;
 import com.sparta.delivery.inquiry.message.InquiryMessage;
+import com.sparta.delivery.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -32,17 +33,18 @@ public class DiscordService {
         MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new InquiryMessage(user, title, content));
         channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
     }
-
-    //식당 사장의 식당 등록 요청
-    public void ShopOwnerSendMessageToDiscord(User user, String shopName, String roadAddress, String deTailAddress) {
-        log.info("Shop Owner Send Message To Discord");
-        TextChannel channel = jda.getTextChannelById(channelId);
-        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new ShopOwnerMessage(user, shopName,roadAddress, deTailAddress));
-        channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
-    }
-
-
-
-
+// TODO 식당이 아직 없음
+//    //식당 사장의 식당 등록 요청
+//    public void ShopOwnerSendMessageToDiscord(User user, String shopName, String roadAddress, String deTailAddress) {
+//        log.info("Shop Owner Send Message To Discord");
+//        TextChannel channel = jda.getTextChannelById(channelId);
+//        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new ShopOwnerMessage(user, shopName,roadAddress, deTailAddress));
+//        channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
 
 }
+
+
+
+
+
+

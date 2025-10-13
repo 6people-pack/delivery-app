@@ -1,7 +1,7 @@
 package com.sparta.delivery.inquiry.listener;
 
 
-import com.sparta.delivery.global.discord.api.DiscordService;
+import com.sparta.delivery.discord.api.DiscordService;
 import com.sparta.delivery.inquiry.event.InquiryCreateEvent;
 import jdk.jfr.Description;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +9,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import shop.matjalalzz.global.discord.api.DiscordService;
-import shop.matjalalzz.inquiry.event.InquiryCreateEvent;
 
 @Component
 @RequiredArgsConstructor
