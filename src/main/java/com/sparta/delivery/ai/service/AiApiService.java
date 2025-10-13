@@ -125,11 +125,13 @@ public class AiApiService {
         return response.getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text");
     }
     //응답에서 answer 추출
-    //Todo : 결과에서 ':' 이후부터 마지막 " 앞까지 공백 여부로 조건 넣기
     private String fromJSONtoAnswer(String responseBody) {
         JSONObject response = new JSONObject(responseBody);
         String text = response.getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text");
-        return text.substring(text.indexOf(":")+3,text.length()-2);
+        text = text.substring(text.indexOf(":")+1,text.length()-2);
+        //:이후에 공백이 있으면 2칸 제거, 없으면 1칸 제거
+        if(text.startsWith(" ")) return text.substring(2);
+        return text.substring(1);
     }
 
 }
