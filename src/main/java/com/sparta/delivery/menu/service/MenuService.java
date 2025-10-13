@@ -1,10 +1,11 @@
 package com.sparta.delivery.menu.service;
 
 import com.sparta.delivery.menu.domain.Menu;
-import com.sparta.delivery.menu.domain.MenuStatus;
-import com.sparta.delivery.menu.dto.MenuCreateRequest;
-import com.sparta.delivery.menu.dto.MenuResponse;
-import com.sparta.delivery.menu.dto.MenuUpdateRequest;
+import com.sparta.delivery.menu.dto.MenuCreateRequestDto;
+import com.sparta.delivery.menu.dto.MenuUpdateRequestDto;
+import com.sparta.delivery.menu.dto.MenuResponseDto;
+import com.sparta.delivery.menu.dto.MenuSummaryDto;
+import com.sparta.delivery.menu.mapper.MenuMapper;
 import com.sparta.delivery.menu.repository.MenuRepository;
 import com.sparta.delivery.restaurant.domain.Restaurant;
 import jakarta.persistence.EntityManager;
@@ -22,42 +23,38 @@ import java.util.UUID;
 public class MenuService {
 
     private final MenuRepository menuRepository;
+    private final MenuMapper menuMapper;
 
     @PersistenceContext
     private EntityManager em;
 
-    public MenuResponse create(MenuCreateRequest req) {
-        // 식당 프록시 참조 (식당을 진짜로 불러오지 않고 ID로만 연결)
+    public MenuResponseDto create(MenuCreateRequestDto req) {
+        // 식당 프록시 참조 (ID만으로 참조)
         Restaurant restaurantRef = em.getReference(Restaurant.class, req.restaurantId());
 
-        Menu menu = Menu.builder()
-                .restaurant(restaurantRef)
-                .name(req.name())
-                .description(req.description())
-                .price(req.price())
-                .discountPrice(req.discountPrice() != null ? req.discountPrice() : 0)
-                .option(req.option())
-                .status(req.status() != null ? req.status() : MenuStatus.SALE)
-                .build();
-
+        Menu menu = menuMapper.toEntity(req, restaurantRef);
         Menu saved = menuRepository.save(menu);
-        return toResponse(saved);
+        return menuMapper.toResponse(saved);
     }
 
-    public MenuResponse get(UUID menuId) {
-        return toResponse(find(menuId));
+    public MenuResponseDto get(UUID menuId) {
+        return menuMapper.toResponse(find(menuId));
     }
 
-    public List<MenuResponse> listByRestaurant(UUID restaurantId) {
+    //요약 DTO로 가볍게 내려줌
+    public List<MenuSummaryDto> listByRestaurant(UUID restaurantId) {
         return menuRepository.findByRestaurant_Id(restaurantId)
-                .stream().map(this::toResponse).toList();
+                .stream()
+                .map(menuMapper::toSummary)
+                .toList();
     }
 
-    public MenuResponse update(UUID menuId, MenuUpdateRequest req) {
+    public MenuResponseDto update(UUID menuId, MenuUpdateRequestDto req) {
         Menu menu = find(menuId);
+        // 엔티티의 부분 업데이트 메서드 활용 (null만 건너뜀)
         menu.update(req.name(), req.description(), req.price(),
                 req.discountPrice(), req.option(), req.status());
-        return toResponse(menu); // dirty checking으로 반영
+        return menuMapper.toResponse(menu); // dirty checking 반영
     }
 
     public void delete(UUID menuId) {
@@ -70,20 +67,5 @@ public class MenuService {
     private Menu find(UUID id) {
         return menuRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Menu not found: " + id));
-    }
-
-    private MenuResponse toResponse(Menu m) {
-        return new MenuResponse(
-                m.getId(),
-                m.getRestaurant().getId(),
-                m.getName(),
-                m.getDescription(),
-                m.getPrice(),
-                m.getDiscountPrice(),
-                m.getOption(),
-                m.getStatus(),
-                m.getCreatedAt(),
-                m.getUpdatedAt()
-        );
     }
 }
