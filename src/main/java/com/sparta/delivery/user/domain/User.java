@@ -3,7 +3,6 @@ package com.sparta.delivery.user.domain;
 import com.sparta.delivery.global.unit.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
