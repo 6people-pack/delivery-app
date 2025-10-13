@@ -1,7 +1,9 @@
 package com.sparta.delivery.ai.controller;
 
+import com.sparta.delivery.ai.dto.AiAllResponseDto;
 import com.sparta.delivery.ai.dto.AiRequestDto;
 import com.sparta.delivery.ai.dto.AiResponseDto;
+import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
 import com.sparta.delivery.ai.service.AiApiService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
@@ -15,7 +17,14 @@ public class AiApiController {
     private final AiApiService aiApiService;
 
     @PostMapping
-    public BaseResponse<AiResponseDto> askQuestion (@RequestBody AiRequestDto requestDto) {
-        return BaseResponse.ok(aiApiService.getAnswerFromAi(requestDto.getQuestion()), BaseStatus.OK);
+    public BaseResponse<AiSimpleResponseDto> askQuestion (@RequestBody AiRequestDto requestDto) {
+        return BaseResponse.ok(aiApiService.getAnswerFromAi(requestDto.getQuestion()), BaseStatus.CREATED);
+    }
+
+    @GetMapping
+    public BaseResponse<AiAllResponseDto> getAllChats(@RequestParam(required = false) String startday,
+                                                      @RequestParam(required = false) String endday,
+                                                      @RequestParam(required = false) String word) {
+        return BaseResponse.ok(aiApiService.getAllChats(startday, endday,word), BaseStatus.OK);
     }
 }
