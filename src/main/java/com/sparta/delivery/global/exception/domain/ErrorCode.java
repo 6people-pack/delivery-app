@@ -23,7 +23,8 @@ public enum ErrorCode {
 
     // 404 Not Found
     LOGIN_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "로그인 정보와 일치하는 사용자가 존재하지 않습니다."),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자가 존재하지 않습니다.");
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자가 존재하지 않습니다."),
+    AI_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 ai사용 기록이 존재하지 않습니다.");
 
     private final HttpStatus status;
     private final String message;

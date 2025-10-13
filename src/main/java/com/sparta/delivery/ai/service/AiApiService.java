@@ -1,11 +1,13 @@
 package com.sparta.delivery.ai.service;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sparta.delivery.ai.domain.Ai;
 import com.sparta.delivery.ai.domain.QAi;
 import com.sparta.delivery.ai.dto.AiAllResponseDto;
 import com.sparta.delivery.ai.dto.AiResponseDto;
 import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
 import com.sparta.delivery.ai.repository.AiRepository;
+import com.sparta.delivery.global.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -13,20 +15,23 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import com.querydsl.core.BooleanBuilder;
+import com.sparta.delivery.global.exception.domain.ErrorCode;
 
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class AiApiService {
 
     private final RestTemplate restTemplate;
@@ -37,7 +42,9 @@ public class AiApiService {
         this.restTemplate = builder.build();
     }
 
+
     //todo : 입력 텍스트의 글자수를 제한, 실제 요청 텍스트 마지막에 “답변을 최대한 간결하게 50자 이하로 작성해줘" 추가
+    @Transactional
     public AiSimpleResponseDto getAnswerFromAi(String question) {
 
         //요청 url 만들기
@@ -65,6 +72,7 @@ public class AiApiService {
     }
 
     // 모든 질문과 답변 조회
+    //todo : 검색 기록은 관리자만 가능하도록 권한 추가
     public AiAllResponseDto getAllChats(String startday, String endday, String word) {
 
             BooleanBuilder builder  = new BooleanBuilder();
@@ -87,9 +95,14 @@ public class AiApiService {
         List<Ai> aiList = (List<Ai>) aiRepository.findAll(builder, Sort.by(Sort.Order.desc("createdAt")));
 
         List<AiResponseDto> aiResponseDtoList = aiList.stream()
-                .map(chat -> new AiResponseDto(chat.getId().toString(), chat.getAnswer(), chat.getCreatedAt()))
+                .map(AiResponseDto::new)
                 .toList();
         return new AiAllResponseDto(aiResponseDtoList);
+    }
+
+    public AiResponseDto getChat(String aiId) {
+        Ai ai = aiRepository.findById(UUID.fromString(aiId)).orElseThrow(()-> new BusinessException(ErrorCode.AI_NOT_FOUND));
+        return new AiResponseDto(ai);
     }
 
     // 질문을 json 형태로 변환
@@ -133,5 +146,6 @@ public class AiApiService {
         if(text.startsWith(" ")) return text.substring(2);
         return text.substring(1);
     }
+
 
 }
