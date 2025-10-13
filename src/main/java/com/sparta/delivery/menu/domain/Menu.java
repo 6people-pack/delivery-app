@@ -18,10 +18,10 @@ public class Menu {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "menu_id", columnDefinition = "BINARY(16)")
+    @Column(name = "menu_id", columnDefinition = "uuid")
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
 
@@ -37,7 +37,7 @@ public class Menu {
     @Column(nullable = false, columnDefinition = "int default 0")
     private int discountPrice;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "\"option\"")
     private String option;
 
     @Enumerated(EnumType.STRING)

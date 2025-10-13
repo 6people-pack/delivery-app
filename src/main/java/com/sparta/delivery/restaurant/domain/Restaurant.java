@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
-import org.hibernate.annotations.JdbcTypeCode;
 
 @Entity
 @Getter
@@ -16,8 +14,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 public class Restaurant {
     @Id
     @UuidGenerator
-    @JdbcTypeCode(SqlTypes.BINARY) // MySQL BINARY(16)
-    @Column(name = "restaurant_id", columnDefinition = "BINARY(16)")
+    @Column(name = "restaurant_id", columnDefinition = "uuid")
     private UUID id;
 
     @Column(nullable = false, length = 60)
