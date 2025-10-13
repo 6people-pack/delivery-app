@@ -2,7 +2,6 @@ package com.sparta.delivery.ai.controller;
 
 import com.sparta.delivery.ai.dto.AiAllResponseDto;
 import com.sparta.delivery.ai.dto.AiRequestDto;
-import com.sparta.delivery.ai.dto.AiResponseDto;
 import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
 import com.sparta.delivery.ai.service.AiApiService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
