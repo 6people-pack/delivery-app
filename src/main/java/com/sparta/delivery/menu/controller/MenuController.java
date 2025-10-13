@@ -1,8 +1,8 @@
 package com.sparta.delivery.menu.controller;
 
-import com.sparta.delivery.menu.dto.MenuCreateRequest;
-import com.sparta.delivery.menu.dto.MenuResponse;
-import com.sparta.delivery.menu.dto.MenuUpdateRequest;
+import com.sparta.delivery.menu.dto.MenuCreateRequestDto;
+import com.sparta.delivery.menu.dto.MenuResponseDto;
+import com.sparta.delivery.menu.dto.MenuUpdateRequestDto;
 import com.sparta.delivery.menu.service.MenuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,27 +22,27 @@ public class MenuController {
 
     // POST /api/menus
     @PostMapping("/menus")
-    public ResponseEntity<MenuResponse> create(@RequestBody @Valid MenuCreateRequest req) {
-        MenuResponse created = menuService.create(req);
+    public ResponseEntity<MenuResponseDto> create(@RequestBody @Valid MenuCreateRequestDto req) {
+        MenuResponseDto created = menuService.create(req);
         return ResponseEntity.created(URI.create("/api/menus/" + created.id())).body(created);
     }
 
     // PATCH /api/menus/{menuId}
     @PatchMapping("/menus/{menuId}")
-    public ResponseEntity<MenuResponse> update(@PathVariable UUID menuId,
-                                               @RequestBody @Valid MenuUpdateRequest req) {
+    public ResponseEntity<MenuResponseDto> update(@PathVariable UUID menuId,
+                                                  @RequestBody @Valid MenuUpdateRequestDto req) {
         return ResponseEntity.ok(menuService.update(menuId, req));
     }
 
     // GET /api/menus/{menuId}
     @GetMapping("/menus/{menuId}")
-    public ResponseEntity<MenuResponse> get(@PathVariable UUID menuId) {
+    public ResponseEntity<MenuResponseDto> get(@PathVariable UUID menuId) {
         return ResponseEntity.ok(menuService.get(menuId));
     }
 
     // GET /api/restaurants/{restaurantId}/menus
     @GetMapping("/restaurants/{restaurantId}/menus")
-    public ResponseEntity<List<MenuResponse>> listByRestaurant(@PathVariable UUID restaurantId) {
+    public ResponseEntity<List<MenuResponseDto>> listByRestaurant(@PathVariable UUID restaurantId) {
         return ResponseEntity.ok(menuService.listByRestaurant(restaurantId));
     }
 

@@ -4,7 +4,7 @@ import com.sparta.delivery.menu.domain.MenuStatus;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record MenuResponse(
+public record MenuResponseDto(
         UUID id,
         UUID restaurantId,
         String name,

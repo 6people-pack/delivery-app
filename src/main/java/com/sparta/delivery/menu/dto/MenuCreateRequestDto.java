@@ -4,7 +4,7 @@ import com.sparta.delivery.menu.domain.MenuStatus;
 import jakarta.validation.constraints.*;
 import java.util.UUID;
 
-public record MenuCreateRequest(
+public record MenuCreateRequestDto(
         @NotNull UUID restaurantId,
         @NotBlank @Size(max = 30) String name,
         @Positive int price,
