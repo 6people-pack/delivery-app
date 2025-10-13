@@ -2,6 +2,8 @@ package com.sparta.delivery.menu.repository;
 
 import com.sparta.delivery.menu.domain.Menu;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,4 +21,7 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
      * 특정 식당 내에서 이름이 같은 메뉴가 이미 존재하는지 확인
      */
     boolean existsByRestaurant_IdAndName(UUID restaurantId, String name);
+
+    @Query("select m from Menu m join fetch m.restaurant r where r.id = :restaurantId")
+    List<Menu> findByRestaurantIdWithRestaurant(@Param("restaurantId") UUID restaurantId);
 }
