@@ -1,18 +1,29 @@
 package com.sparta.delivery.ai.service;
 
-import com.sparta.delivery.ai.repository.AiRepository;
 import com.sparta.delivery.ai.domain.Ai;
+import com.sparta.delivery.ai.domain.QAi;
+import com.sparta.delivery.ai.dto.AiAllResponseDto;
 import com.sparta.delivery.ai.dto.AiResponseDto;
+import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
+import com.sparta.delivery.ai.repository.AiRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import com.querydsl.core.BooleanBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+
 
 @Slf4j
 @Service
@@ -26,7 +37,8 @@ public class AiApiService {
         this.restTemplate = builder.build();
     }
 
-    public AiResponseDto getAnswerFromAi(String question) {
+    //todo : 입력 텍스트의 글자수를 제한, 실제 요청 텍스트 마지막에 “답변을 최대한 간결하게 50자 이하로 작성해줘" 추가
+    public AiSimpleResponseDto getAnswerFromAi(String question) {
 
         //요청 url 만들기
         URI uri = UriComponentsBuilder
@@ -49,9 +61,35 @@ public class AiApiService {
 
         Ai ai = new Ai(question, answer);
         aiRepository.save(ai);
+        return new AiSimpleResponseDto(answer);
+    }
 
+    // 모든 질문과 답변 조회
+    public AiAllResponseDto getAllChats(String startday, String endday, String word) {
 
-        return new AiResponseDto(answer);
+            BooleanBuilder builder  = new BooleanBuilder();
+            QAi ai = QAi.ai;
+
+            if(StringUtils.hasText(startday)) {
+                LocalDateTime sDay = LocalDateTime.of(LocalDate.parse(startday), LocalTime.of(0,0,0));
+                builder.and(ai.createdAt.goe(sDay));
+            }
+
+            if(StringUtils.hasText(endday)) {
+                LocalDateTime eDay = LocalDateTime.of(LocalDate.parse(endday), LocalTime.of(23,59,59));
+                builder.and(ai.createdAt.loe(eDay));
+            }
+
+            if(StringUtils.hasText(word)) {
+                builder.and(ai.answer.contains(word));
+            }
+
+        List<Ai> aiList = (List<Ai>) aiRepository.findAll(builder, Sort.by(Sort.Order.desc("createdAt")));
+
+        List<AiResponseDto> aiResponseDtoList = aiList.stream()
+                .map(chat -> new AiResponseDto(chat.getId().toString(), chat.getAnswer(), chat.getCreatedAt()))
+                .toList();
+        return new AiAllResponseDto(aiResponseDtoList);
     }
 
     // 질문을 json 형태로 변환
@@ -81,14 +119,17 @@ public class AiApiService {
     }
 
 
+
     private String answerTest(String responseBody) {
         JSONObject response = new JSONObject(responseBody);
         return response.getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text");
     }
     //응답에서 answer 추출
+    //Todo : 결과에서 ':' 이후부터 마지막 " 앞까지 공백 여부로 조건 넣기
     private String fromJSONtoAnswer(String responseBody) {
         JSONObject response = new JSONObject(responseBody);
         String text = response.getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text");
         return text.substring(text.indexOf(":")+3,text.length()-2);
     }
+
 }

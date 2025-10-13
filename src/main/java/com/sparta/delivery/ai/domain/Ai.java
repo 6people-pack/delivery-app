@@ -1,19 +1,21 @@
 package com.sparta.delivery.ai.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.sparta.delivery.user.domain.User;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Entity
-@Table(name="")
+@Table(name="p_ai")
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Ai {
 
     @Id
@@ -24,6 +26,14 @@ public class Ai {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String answer;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @CreatedBy
+    @Column(updatable = false)
+    protected Long createdBy;
 
     public Ai(String question, String answer) {
         this.id = UUID.randomUUID();
