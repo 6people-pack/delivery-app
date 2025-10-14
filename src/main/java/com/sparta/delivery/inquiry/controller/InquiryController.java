@@ -8,6 +8,7 @@ import com.sparta.delivery.inquiry.dto.InquiryOneGetResponseDto;
 import com.sparta.delivery.inquiry.service.InquiryService;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,7 +50,7 @@ public class InquiryController {
         @ResponseStatus(HttpStatus.OK)
         @GetMapping("/inquiry/{inquiryId}")
         public BaseResponse<InquiryOneGetResponseDto> getOneInquiry(@AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long inquiryId) {
+            @PathVariable UUID inquiryId) {
             return BaseResponse.ok(inquiryService.getOneInquiry(userDetails.getUser().getId(), inquiryId), BaseStatus.OK);
         }
 
