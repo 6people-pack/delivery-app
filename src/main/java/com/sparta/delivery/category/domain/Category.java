@@ -12,9 +12,11 @@ import java.util.UUID;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "p_category")
 public class Category extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "category_id")
     private UUID id;
 
     @Column(nullable = false, length = 20, unique = true)
