@@ -27,8 +27,10 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(nullable = false)
     private String nickname;
 
+    @Column(nullable = false)
     private String phoneNumber;
 
     // 고객 회원 생성
