@@ -16,6 +16,7 @@ public enum ErrorCode {
       //image
     IMAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당하는 이미지를 찾을 수 없습니다."),
     IMAGE_SAME_INDEX(HttpStatus.BAD_REQUEST, "같은 인덱스 번호로 변경할 수 없습니다."),
+    IMAGE_MAX_COUNT(HttpStatus.BAD_REQUEST, "이미지는 10개를 초과할 수 없습니다."),
     S3_FOLDER_NO_FILE(HttpStatus.NOT_FOUND, "S3 폴더에 파일이 존재하지 않습니다."),
 
     //tosspay
@@ -28,6 +29,7 @@ public enum ErrorCode {
         // 비번 변경 시
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다. 다시 시도 해주세요."),
     ROLE_AUTHORIZATION_REQUIRED(HttpStatus.UNAUTHORIZED, "권한이 필요한 요청입니다."),
+    NOT_OWNER(HttpStatus.UNAUTHORIZED,"해당 식당의 주인만이 이용 가능합니다." ),
 
     // JWT) 관련
     INVALID_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 JWT 토큰입니다."),
