@@ -40,6 +40,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         // 헤더에서 엑세스토큰 가져옴
         String accessToken = jwtUtil.getJwtFromHeader(req);
+        log.info("accessToken " + accessToken);
         if (StringUtils.hasText(accessToken)) { // 공백이 아닌 문자열이 있으면 true(= 토큰이 있다면)
 
             try {
