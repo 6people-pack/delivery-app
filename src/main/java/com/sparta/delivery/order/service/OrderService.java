@@ -87,6 +87,7 @@ public class OrderService {
 
     // 주문 조회
     public List<GetOrderDto> getOrders(User user) {
+
         List<GetOrderDto> orderDtoList = new ArrayList<>(); // 반환할 주문dto 리스트 형태
         List<Order> orders = orderRepository.findByUserId(user.getId()); // 먼저 db에 있는 주문들 정보 가져옴
 

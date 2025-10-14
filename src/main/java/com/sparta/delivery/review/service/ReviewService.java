@@ -2,7 +2,7 @@ package com.sparta.delivery.review.service;
 
 import com.sparta.delivery.order.domain.OrderStatus;
 import com.sparta.delivery.order.repository.OrderRepository;
-import com.sparta.delivery.order.repository.view.OrderView;
+import com.sparta.delivery.order.domain.Order;
 import com.sparta.delivery.restaurant.repository.RestaurantRepository;
 import com.sparta.delivery.review.domain.Review;
 import com.sparta.delivery.review.dto.ReviewCreateRequestDto;
@@ -27,7 +27,7 @@ public class ReviewService {
 
     public ReviewResponseDto create(UUID loginUserId, ReviewCreateRequestDto req) {
         //주문 요약 조회
-        OrderView order = orderRepository.findViewById(req.orderId())
+        Order order = orderRepository.findViewById(req.orderId())
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
         //본인 주문 여부
@@ -36,8 +36,8 @@ public class ReviewService {
         }
 
         //주문/배송 완료 상태 확인
-        OrderStatus st = order.getStatus();
-        if (!(st == OrderStatus.DELIVERED || st == OrderStatus.COMPLETED)) {
+        OrderStatus st = order.getOrderStatus();
+        if (!(st == OrderStatus.DELIVERED || st == OrderStatus.DELIVERED)) {
             throw new IllegalStateException("주문/배송 완료 이후에만 리뷰 작성 가능합니다.");
         }
 
