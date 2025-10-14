@@ -43,9 +43,9 @@ public class AiApiService {
     }
 
 
-    //todo : 입력 텍스트의 글자수를 제한, 실제 요청 텍스트 마지막에 “답변을 최대한 간결하게 50자 이하로 작성해줘" 추가
     @Transactional
     public AiSimpleResponseDto getAnswerFromAi(String question) {
+        question += " 답변은 최대한 간결하게 50자 이하로 작성해줘";
 
         //요청 url 만들기
         URI uri = UriComponentsBuilder
@@ -63,8 +63,9 @@ public class AiApiService {
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
         log.info("AI API Status Code : " + responseEntity.getStatusCode());
-        log.info("AI API Answer : " + answerTest(responseEntity.getBody()));
+        log.info("AI API Question : " + question);
         String answer = fromJSONtoAnswer(responseEntity.getBody());
+        log.info("AI API Answer : " + answer);
 
         Ai ai = new Ai(question, answer);
         aiRepository.save(ai);
@@ -131,12 +132,6 @@ public class AiApiService {
             """,  question.replace("\"", "\\\""));
     }
 
-
-
-    private String answerTest(String responseBody) {
-        JSONObject response = new JSONObject(responseBody);
-        return response.getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text");
-    }
     //응답에서 answer 추출
     private String fromJSONtoAnswer(String responseBody) {
         JSONObject response = new JSONObject(responseBody);
