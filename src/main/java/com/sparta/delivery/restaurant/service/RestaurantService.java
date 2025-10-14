@@ -1,6 +1,5 @@
 package com.sparta.delivery.restaurant.service;
 
-import com.sparta.delivery.category.repository.CategoryRepository;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.restaurant.domain.RatingStatus;
@@ -24,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -115,9 +113,6 @@ public class RestaurantService {
     @Transactional(readOnly = true)
     public SliceListResponseDto getAllRestaurants(int page, int size, String sortBy, UUID category, String name, Double lat, Double lon) {
         Slice<RestaurantListResponseDto> restaurantList;
-        // 이름이 비어있으면 null 로 처리하여 JPQL 의 동적 쿼리 작동
-        String searchName = name == null ? null : name;
-
         // 거리 기준 정렬
         if ("distance".equalsIgnoreCase(sortBy)) {
             // Bounding Box 계산 로직 (3km 반경내 식당 필터 후 거리 계산)
@@ -137,14 +132,14 @@ public class RestaurantService {
 
             Pageable pageable = PageRequest.of(page, size);
             restaurantList = restaurantRepository.findNearbyWithBoundingBox(
-                    searchName, category, lat, lon, minLat, maxLat, minLon, maxLon, pageable
+                    name, category, lat, lon, minLat, maxLat, minLon, maxLon, pageable
             );
 
             // 별점 정렬 (식당에 존재하는 필드중 다른 정렬 조건 입력가능)
         } else {
             Sort sort = Sort.by(Sort.Direction.DESC, sortBy);
             Pageable pageable = PageRequest.of(page, size, sort);
-            restaurantList = restaurantRepository.findWithFilters(searchName, category, lat, lon, pageable);
+            restaurantList = restaurantRepository.findWithFilters(name, category, lat, lon, pageable);
         }
 
         return SliceListResponseDto.builder()

@@ -43,7 +43,7 @@ public class CategoryService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        if (categoryRepository.existsByName(requestDto.name())) {
+        if (categoryRepository.existsByNameAndIdNot(requestDto.name(), categoryId)) {
             throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
 
