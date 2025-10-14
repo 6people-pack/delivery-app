@@ -32,4 +32,5 @@ public class AiApiController {
     public BaseResponse<AiResponseDto> getChat(@PathVariable("ai_id") String aiId) {
         return BaseResponse.ok(aiApiService.getChat(aiId), BaseStatus.OK);
     }
+
 }
