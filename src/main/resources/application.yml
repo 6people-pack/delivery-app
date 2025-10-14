@@ -1,6 +1,7 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -21,8 +22,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 
-server:
-  port: ${PORT}
+#server:
+#  port: ${PORT}
 
 jwt:
   secret:
