@@ -4,11 +4,11 @@ import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.order.dto.CancelOrderOwnerDto;
 import com.sparta.delivery.order.dto.GetOrderDto;
-import com.sparta.delivery.order.dto.createOrderDto;
+import com.sparta.delivery.order.dto.CreateOrderDto;
 import com.sparta.delivery.order.service.OrderService;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
@@ -26,7 +26,8 @@ public class OrderController {
     @PostMapping("/")
     public BaseResponse<Void> createOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid createOrderDto dto) {
+            @RequestBody @Valid CreateOrderDto dto) {
+
         orderService.createOrder(userDetails.getUser(), dto);
         return BaseResponse.ok(BaseStatus.CREATED);
     }

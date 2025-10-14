@@ -18,9 +18,15 @@ import java.util.UUID;
 public class Order extends BaseEntity {
 
     @Id
-    @GeneratedValue
-    @Column(name = "order_id", columnDefinition = "UUID")
-    private UUID orderId;
+    @Column(name = "order_id", columnDefinition = "uuid")
+    private UUID id;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+    }
 
     @Column(name = "order_number", length = 30, nullable = false, unique = true)
     private String orderNumber;
@@ -39,7 +45,7 @@ public class Order extends BaseEntity {
     private Long userId;
 
     @Column(name = "restaurant_id", columnDefinition = "UUID")
-    private UUID restaurantId;   // 임시, 나중에 식당으로
+    private UUID restaurantId;
 
     @Column(name = "gross_amount")
     private int grossAmount;

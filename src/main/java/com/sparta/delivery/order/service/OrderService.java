@@ -10,11 +10,11 @@ import com.sparta.delivery.order.domain.OrderStatus;
 import com.sparta.delivery.order.dto.CancelOrderOwnerDto;
 import com.sparta.delivery.order.dto.GetOrderDto;
 import com.sparta.delivery.order.dto.GetOrderItemDto;
-import com.sparta.delivery.order.dto.createOrderDto;
+import com.sparta.delivery.order.dto.CreateOrderDto;
 import com.sparta.delivery.order.repository.OrderRepository;
 import com.sparta.delivery.user.domain.User;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,14 +23,14 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final CartItemService cartItemService;
 
     // 주문 생성
-    public void createOrder(User user, @Valid createOrderDto dto) {
+    public void createOrder(User user, @Valid CreateOrderDto dto) {
         String orderNumber = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         String address = dto.address();                 // 주소
         String addressDetail = dto.addressDetail();     // 상세주소
@@ -47,41 +47,41 @@ public class OrderService {
         // 주문 상품
         List<OrderItem> orderItems = new ArrayList<>();
         List<GetCartItemDto> cartItems = cartItemService.getCartItems(user);
-        UUID restaurantId = cartItems.get(0).menu().getRestaurantId();  // 식당id
-
-        for (GetCartItemDto item : cartItems) {
-            originalPrice += item.menu().getPrice();
-            discountAmount += item.menu().getDiscountPrice();
-
-            orderItems.add(new OrderItem(
-                    item.menu().getName(),
-                    item.menu().getPrice(),
-                    item.quantity(),
-                    item.options(),
-                    item.menu().getId()
-            ));
-        }
-
-        // 주문 가격
-        int totalAmount = originalPrice - discountAmount + deliveryFee;
-        int vat = totalAmount / 10;
-
-        orderRepository.save(new Order(
-                orderNumber,
-                address,
-                addressDetail,
-                userId,
-                restaurantId,
-                originalPrice,
-                vat,
-                deliveryFee,
-                discountAmount,
-                totalAmount,
-                customerRequest,
-                orderItems,
-                orderedAt
-
-        ));
+//        UUID restaurantId = cartItems.get(0).menu().getRestaurantId();  // 식당id
+//
+//        for (GetCartItemDto item : cartItems) {
+//            originalPrice += item.menu().getPrice();
+//            discountAmount += item.menu().getDiscountPrice();
+//
+//            orderItems.add(new OrderItem(
+//                    item.menu().getName(),
+//                    item.menu().getPrice(),
+//                    item.quantity(),
+//                    item.options(),
+//                    item.menu().getId()
+//            ));
+//        }
+//
+//        // 주문 가격
+//        int totalAmount = originalPrice - discountAmount + deliveryFee;
+//        int vat = totalAmount / 10;
+//
+//        orderRepository.save(new Order(
+//                orderNumber,
+//                address,
+//                addressDetail,
+//                userId,
+//                restaurantId,
+//                originalPrice,
+//                vat,
+//                deliveryFee,
+//                discountAmount,
+//                totalAmount,
+//                customerRequest,
+//                orderItems,
+//                orderedAt
+//
+//        ));
 
     }
 
@@ -98,7 +98,7 @@ public class OrderService {
                 orderItemDtoList.add(new GetOrderItemDto(
                         orderItem.getMenuName(),
                         orderItem.getQuantity(),
-                        orderItem.getOptions()
+                        orderItem.getOption()
                 ));
             }
 

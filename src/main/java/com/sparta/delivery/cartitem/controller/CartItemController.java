@@ -2,14 +2,14 @@ package com.sparta.delivery.cartitem.controller;
 
 import com.sparta.delivery.cartitem.dto.AddCartItemDto;
 import com.sparta.delivery.cartitem.dto.GetCartItemDto;
-import com.sparta.delivery.cartitem.dto.updateCartItemOptionsDto;
+import com.sparta.delivery.cartitem.dto.updateCartItemOptionDto;
 import com.sparta.delivery.cartitem.dto.updateCartItemQuantityDto;
 import com.sparta.delivery.cartitem.service.CartItemService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,18 +17,11 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/cartitems")
-@AllArgsConstructor
+@RequestMapping("/api/cart-items")
+@RequiredArgsConstructor
 public class CartItemController {
 
     private final CartItemService cartItemService;
-
-    // 예시 입니다 참고용
-//    @ResponseStatus(HttpStatus.CREATED)
-//    @PostMapping("/inquiry")
-//    public BaseResponse<PreSignedUrlListResponse> newInquiry(@AuthenticationPrincipal PrincipalUser principal, @RequestBody @Valid InquiryCreateRequest request) {
-//        return BaseResponse.ok(inquiryFacade.createNewInquiry(principal.getId(), request), BaseStatus.OK);
-//    }
 
     // 장바구니 메뉴 추가
     @PostMapping("/")
@@ -37,7 +30,6 @@ public class CartItemController {
             @RequestBody @Valid AddCartItemDto dto) {
 
         cartItemService.addCartItem(userDetails.getUser(), dto);
-
         return BaseResponse.ok(BaseStatus.CREATED);
     }
 
@@ -71,7 +63,7 @@ public class CartItemController {
     @PatchMapping("/options")
     public BaseResponse<Void> updateCartItemOption(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid updateCartItemOptionsDto dto) {
+            @RequestBody @Valid updateCartItemOptionDto dto) {
 
         cartItemService.updateCartItemOption(userDetails.getUser(), dto);
         return BaseResponse.ok(BaseStatus.OK);

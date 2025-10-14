@@ -31,12 +31,15 @@ public class User extends BaseEntity {
 
     private String phoneNumber;
 
-    public User(String email, String password, String nickname, String phoneNumber) {
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.phoneNumber = phoneNumber;
-        this.role = Role.CUSTOMER;
+    // 고객 회원 생성
+    public static User createCustomer(String email, String password, String nickname, String phoneNumber) {
+        User user = new User();
+        user.email = email;
+        user.password = password;
+        user.nickname = nickname;
+        user.phoneNumber = phoneNumber;
+        user.role = Role.CUSTOMER; // 역할 초기화
+        return user;
     }
 
     // 닉네임 변경 메서드
@@ -47,6 +50,11 @@ public class User extends BaseEntity {
     // 핸드폰번호 변경 메서드
     public void updatePhoneNumber(String phone_number) {
         this.phoneNumber = phone_number;
+    }
+
+    // 비밀번호 변경 메서드
+    public void updatePassword(String password) {
+        this.password = password;
     }
 
     // 권한 변경 메서드

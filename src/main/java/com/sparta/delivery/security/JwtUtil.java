@@ -2,22 +2,31 @@ package com.sparta.delivery.security;
 
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
+import com.sparta.delivery.global.unit.utils.CookieUtils;
+import com.sparta.delivery.user.domain.RefreshToken;
+import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.dto.RefreshTokenDto;
+import com.sparta.delivery.user.repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 
 @Slf4j(topic = "JwtUtil")
 @Component
+@RequiredArgsConstructor
 public class JwtUtil {
     // Header accessToken KEY 값
     public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -35,6 +44,8 @@ public class JwtUtil {
 
     private Key key;
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
+
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @PostConstruct
     public void init() {
@@ -95,6 +106,50 @@ public class JwtUtil {
     // 토큰에서 사용자 정보 가져오기
     public Claims getUserInfoFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    }
+
+    //엑세스 토큰 발급 및 헤더 등록
+    public void issueAndSetAccessToken(HttpServletResponse response, String email) {
+
+        String accessToken = issueAccessToken(email);           // accessToken 발급
+        response.setHeader("Authorization", accessToken); // accessToken은 헤더에 저장
+    }
+
+    //리프레시 토큰 발급 및 쿠키, db저장
+    public void issueAndSetRefreshToken(HttpServletResponse response, User user) {
+
+        refreshTokenRepository.deleteByUser(user); // db에 리프레시 토큰 있으면 삭제
+
+        // 만료 시간도 받아오기 위해 Dto로 전달
+        RefreshTokenDto refreshTokenDto = issueRefreshToken(user.getEmail());
+        String refreshToken = refreshTokenDto.token();
+        Date exp = refreshTokenDto.exp();
+
+        refreshTokenRepository.save(
+                RefreshToken.builder()
+                        .refreshToken(refreshToken)
+                        .user(user)
+                        .exp(exp)
+                        .build()
+        );
+
+        Duration ttlTime = Duration.between(
+                Instant.now(),
+                exp.toInstant()
+        );
+
+        // refreshToken은 http only 쿠키 방식으로 클라이언트에게 줌, ttlTime만큼 시간이 경과하면 삭제
+        CookieUtils.setRefreshTokenCookie(response, refreshToken, ttlTime);
+    }
+
+    // 리프레시 토큰 검증
+    public void validateRefreshToken(User user, String refreshToken) {
+        RefreshToken dbToken = refreshTokenRepository.findRefreshTokenByUser(user)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_JWT_TOKEN));
+
+        if (!dbToken.getRefreshToken().equals(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+        }
     }
 
 }
