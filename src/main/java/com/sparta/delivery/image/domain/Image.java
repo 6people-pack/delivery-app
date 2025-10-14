@@ -14,6 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Image {
     @Id
+    @Column(name="image_id")
     private UUID id;
 
     @Enumerated(EnumType.STRING)
