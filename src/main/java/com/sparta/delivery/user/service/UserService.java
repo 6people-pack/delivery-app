@@ -69,7 +69,6 @@ public class UserService {
             throw new BusinessException(ErrorCode.LOGIN_USER_NOT_FOUND);  //404
         }
 
-        //TODO 이부분 코드 검증이랑 다 추가해야 합니다
 
         issueAndSetAccessToken(response, user.getEmail());
         issueAndSetRefreshToken(response, user);

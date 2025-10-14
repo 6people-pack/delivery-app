@@ -104,6 +104,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         // Principal(사용자정보), Credentials(비빌번호), Authorities(권한) 순서
         // 비밀번호는 현재 인증된 상태라 null, 권한도 db에서 직접 확인할 예정이라 null
-        return new UsernamePasswordAuthenticationToken(userDetails, null, null);
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }
