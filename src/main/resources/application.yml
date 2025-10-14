@@ -1,11 +1,17 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO}
@@ -14,10 +20,21 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    aws:
+      s3:
+        bucket: ${S3_BUCKET_NAME}
+      credentials:
+        access-key: ${S3_ACCESS_KEY}
+        secret-key: ${S3_SECRET_KEY}
+      region:
+        static: ${S3_REGION}
+    stack:
+      auto: false
 
 
-server:
-  port: ${PORT}
+#server:
+#  port: ${PORT}
 
 jwt:
   secret:
@@ -25,3 +42,13 @@ jwt:
   expiration:
     access-token: ${JWT_EXPIRATION_ACCESSTOKEN}
     refresh-token: ${JWT_EXPIRATION_REFRESHTOKEN}
+
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+  client-key: ${TOSS_CLIENT_KEY}
+
+discord:
+  bot:
+    token: ${DISCORD_BOT_TOKEN}
+    channel: ${DISCORD_CHANNEL_ID}
