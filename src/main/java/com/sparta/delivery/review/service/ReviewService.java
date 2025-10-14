@@ -9,7 +9,7 @@ import com.sparta.delivery.review.dto.ReviewCreateRequestDto;
 import com.sparta.delivery.review.dto.ReviewResponseDto;
 import com.sparta.delivery.review.dto.ReviewUpdateRequestDto;
 import com.sparta.delivery.review.repository.ReviewRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -67,12 +67,14 @@ public class ReviewService {
         );
     }
 
+    @Transactional(readOnly = true)
     public ReviewResponseDto get(UUID reviewId) {
         var r = reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰가 없습니다."));
         return new ReviewResponseDto(r.getId(), r.getRestaurantId(), r.getUserId(), r.getRating(), r.getContent());
     }
 
+    @Transactional(readOnly = true)
     public Page<ReviewResponseDto> listByRestaurant(UUID restaurantId, int page, int size, String sort) {
         Sort s = switch (sort) {
             case "RATING_DESC" -> Sort.by(Sort.Direction.DESC, "rating");
@@ -83,6 +85,7 @@ public class ReviewService {
                 .map(r -> new ReviewResponseDto(r.getId(), r.getRestaurantId(), r.getUserId(), r.getRating(), r.getContent()));
     }
 
+    @Transactional
     public ReviewResponseDto update(UUID loginUserId, UUID reviewId, ReviewUpdateRequestDto req) {
         var r = reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰가 없습니다."));
@@ -91,6 +94,7 @@ public class ReviewService {
         return new ReviewResponseDto(r.getId(), r.getRestaurantId(), r.getUserId(), r.getRating(), r.getContent());
     }
 
+    @Transactional
     public void delete(UUID loginUserId, UUID reviewId) {
         var r = reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰가 없습니다."));
