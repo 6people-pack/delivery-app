@@ -1,5 +1,6 @@
 package com.sparta.delivery.menu.domain;
 
+import com.sparta.delivery.global.unit.common.BaseEntity;
 import com.sparta.delivery.restaurant.domain.Restaurant;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Table(name = "p_menu")
-public class Menu {
+public class Menu extends BaseEntity{
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
