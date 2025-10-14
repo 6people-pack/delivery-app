@@ -54,7 +54,7 @@ public class AiApiService {
 
         //권한 체크
         User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if(user.getRole() != Role.OWNER) throw new BusinessException(ErrorCode.NOT_OWNER);
+//        if(user.getRole() != Role.OWNER) throw new BusinessException(ErrorCode.NOT_OWNER);
 
         //요청 url 만들기
         URI uri = UriComponentsBuilder
@@ -85,7 +85,7 @@ public class AiApiService {
     public AiAllResponseDto getAllChats(Long userId, String startday, String endday, String word) {
         //권한 체크
         User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
+//        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
 
         //검색 조건 빌더
         BooleanBuilder builder  = new BooleanBuilder();
@@ -116,7 +116,7 @@ public class AiApiService {
     public AiResponseDto getChat(Long userId, String aiId) {
         //권한 체크
         User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
+//        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
 
         Ai ai = aiRepository.findById(UUID.fromString(aiId)).orElseThrow(()-> new BusinessException(ErrorCode.AI_NOT_FOUND));
         return new AiResponseDto(ai);
