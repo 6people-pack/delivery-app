@@ -6,6 +6,7 @@ import com.sparta.delivery.restaurant.domain.RatingStatus;
 import com.sparta.delivery.restaurant.domain.Restaurant;
 import com.sparta.delivery.restaurant.domain.RestaurantCategory;
 import com.sparta.delivery.restaurant.dto.*;
+import com.sparta.delivery.restaurant.mapper.RestaurantCategoryMapper;
 import com.sparta.delivery.restaurant.mapper.RestaurantMapper;
 import com.sparta.delivery.restaurant.repository.RestaurantCategoryRepository;
 import com.sparta.delivery.restaurant.repository.RestaurantRepository;
@@ -39,18 +40,13 @@ public class RestaurantService {
             throw new BusinessException(ErrorCode.BUSINESS_CODE_EXISTS);
         }
 
-        // Todo : AI 설명 생성 추가, 이미지 저장
-        String description = "";
-
-        Restaurant restaurant = RestaurantMapper.toRestaurant(user.getId(), requestDto, description);
+        // Todo : 이미지 저장
+        Restaurant restaurant = RestaurantMapper.toRestaurant(user.getId(), requestDto);
         restaurantRepository.save(restaurant);
 
         ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
         for (UUID category : requestDto.categories()) {
-            allCategories.add(RestaurantCategory.builder()
-                    .restaurant(restaurant)
-                    .categoryId(category)
-                    .build());
+            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(restaurant, category));
         }
         restaurantCategoryRepository.saveAll(allCategories);
     }
@@ -67,20 +63,15 @@ public class RestaurantService {
             throw new BusinessException(ErrorCode.BUSINESS_CODE_EXISTS);
         }
 
-        // Todo : AI 설명, 이미지 수정
-        String description = "";
-
-        findRestaurant.editRestaurant(requestDto, description);
+        // Todo : 이미지 수정
+        findRestaurant.editRestaurant(requestDto);
 
         // 기존 식당_카테고리 삭제후 재생성
         restaurantCategoryRepository.deleteAllByRestaurant(findRestaurant);
         ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
 
         for (UUID category : requestDto.categories()) {
-            allCategories.add(RestaurantCategory.builder()
-                    .restaurant(findRestaurant)
-                    .categoryId(category)
-                    .build());
+            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(findRestaurant, category));
         }
         restaurantCategoryRepository.saveAll(allCategories);
     }
@@ -103,7 +94,7 @@ public class RestaurantService {
         List<RestaurantDetailResponseDto> restaurantList = new ArrayList<>();
         if (!OwnerRestaurantList.isEmpty()) {
             restaurantList = OwnerRestaurantList.stream()
-                    .map(RestaurantDetailResponseDto::new)
+                    .map(RestaurantMapper::toRestaurantDetailResponseDto)
                     .toList();
         }
         return restaurantList;
@@ -142,11 +133,7 @@ public class RestaurantService {
             restaurantList = restaurantRepository.findWithFilters(name, category, lat, lon, pageable);
         }
 
-        return SliceListResponseDto.builder()
-                .restaurants(restaurantList.getContent())
-                .nowPage(restaurantList.getNumber())
-                .hasNextPage(restaurantList.hasNext())
-                .build();
+        return RestaurantMapper.toSliceListResponseDto(restaurantList.getContent(), restaurantList.getNumber(), restaurantList.hasNext());
     }
 
     // 상세 정보 조회
@@ -154,7 +141,7 @@ public class RestaurantService {
     public RestaurantDetailResponseDto getRestaurantDetail(UUID restaurantId) {
         Restaurant findRestaurant = restaurantRepository.findByIdAndDeletedAtIsNull(restaurantId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
-        return new RestaurantDetailResponseDto(findRestaurant);
+        return RestaurantMapper.toRestaurantDetailResponseDto(findRestaurant);
     }
 
     // 별점 반영
