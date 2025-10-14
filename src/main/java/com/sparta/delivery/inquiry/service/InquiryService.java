@@ -73,9 +73,9 @@ public class InquiryService {
 
     // 본인이 작성한 하나의 문의글 조회 (관리자도 조회 가능)
     @Transactional(readOnly = true)
-    public InquiryOneGetResponseDto getOneInquiry(long userId, Long inquiryId) {
+    public InquiryOneGetResponseDto getOneInquiry(long userId, UUID inquiryId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        Inquiry inquiry = inquiryRepository.findByIdAndUser(userId, inquiryId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FIND_INQUIRY));
+        Inquiry inquiry = inquiryRepository.findByIdAndUser(inquiryId, userId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FIND_INQUIRY));
 
         //관리자도 아니고 자신이 쓴 문의글이 아니면 조회 불가
         if (!user.getRole().equals(Role.ADMIN) && !inquiry.getUser().getId().equals(user.getId())) {
