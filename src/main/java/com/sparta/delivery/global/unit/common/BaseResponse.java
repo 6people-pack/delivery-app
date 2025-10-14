@@ -25,11 +25,9 @@ public class BaseResponse<T> {
         return new BaseResponse<>(status, data);
     }
 
-    //성공 시 아무것도 반환하고 싶지 않을 때 사용
+    // 성공 시 아무것도 반환하고 싶지 않을 때 사용
     public static BaseResponse<Void> ok(BaseStatus status) {
         return new BaseResponse<>(status);
     }
-
-
 
 }
