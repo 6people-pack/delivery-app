@@ -30,6 +30,7 @@ public class ImageService {
 
 
     //이미지 업로드(다수 가능)
+    //todo : 이미지 한 폴더 당 10개 제한
     @Transactional
     public ImageMultiResponseDto uploadImage(Long userId, String category, String categoryid, List<MultipartFile> files) {
         //권한 체크
@@ -130,7 +131,7 @@ public class ImageService {
         images.forEach(Image::decreaseIndex);
     }
 
-    //이미지 다건 삭제
+    //이미지 카테고리 삭제
     @Transactional
     public void deleteAllImage(Long userId, String category, String categoryid) {
         //권한 체크
