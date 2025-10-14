@@ -27,7 +27,8 @@ public class TossFeignConfig {
 	}
 
 	@Bean
-	public Request.Options reqeusetOptions() {
+	public Request.Options requestOptions() {
 		return new Request.Options(2, TimeUnit.SECONDS, 30, TimeUnit.SECONDS, true);
 	}
+
 }
