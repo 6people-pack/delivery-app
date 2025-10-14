@@ -15,12 +15,13 @@ import java.util.UUID;
 
 @Entity
 @Getter
+@Table(name = "p_restaurant")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Restaurant extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "restaurant_id", nullable = false, unique = true)
+    @Column(name = "restaurant_id")
     private UUID id;
 
     @Column(nullable = false)

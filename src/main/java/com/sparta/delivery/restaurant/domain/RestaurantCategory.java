@@ -10,11 +10,13 @@ import java.util.UUID;
 
 @Entity
 @Getter
+@Table(name = "p_restaurant_category")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "restaurant_category_id")
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
