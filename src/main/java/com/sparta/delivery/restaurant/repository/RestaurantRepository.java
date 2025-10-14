@@ -13,17 +13,23 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
+    // 사업자 번호 중복 검증 기능 (등록시 사용)
     boolean existsByBusinessNumber(String businessNumber);
 
-    List<Restaurant> findAllByOwnerIdAndDeletedAtIsNull(Long ownerId);
-
-    Optional<Restaurant> findByIdAndDeletedAtIsNull(UUID restaurantId);
-
-    Optional<Restaurant> findByIdAndOwnerIdAndDeletedAtIsNull(UUID restaurantId, Long userId);
-
+    // 사업자 번호 중복 검증 기능 (수정시 사용)
     boolean existsByBusinessNumberAndIdNot(String businessNumber, UUID id);
 
-    // 별점 또는 다른 기준으로 정렬
+    // 삭제되지않은 주인의 식당 조회 기능 (식당 주인 조회시 사용)
+    List<Restaurant> findAllByOwnerIdAndDeletedAtIsNull(Long ownerId);
+
+    // 삭제되지않은 해당 식당 조회 기능
+    Optional<Restaurant> findByIdAndDeletedAtIsNull(UUID restaurantId);
+
+    // 삭제되지않은 주인의 특정 식당 조회 기능 (수정시 사용)
+    Optional<Restaurant> findByIdAndOwnerIdAndDeletedAtIsNull(UUID restaurantId, Long userId);
+
+
+    // 별점 또는 다른 기준(식당 내 필드)으로 정렬
     @Query(value = "SELECT " +
             "r.restaurant_id AS restaurantId, " +
             "r.name AS name, " +
@@ -34,6 +40,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
             "FROM restaurant r " +
             "JOIN restaurant_category rc ON r.restaurant_id = rc.restaurant_id " +
             "WHERE r.deleted_at IS NULL " +
+            // name, category 값이 null 인경우 true 처리되어 필터적용 X
             "AND (:name IS NULL OR r.name LIKE CONCAT('%', :name, '%')) " +
             "AND (:category IS NULL OR rc.category_id = CAST(:category AS uuid))", // UUID 타입 캐스팅
             nativeQuery = true)
@@ -43,7 +50,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
                                                   @Param("lon") Double lon,
                                                   Pageable pageable);
 
-    // 거리 기준 정렬 (Bounding Box 사용)
+    // 거리 기준 정렬 (Bounding Box 사용, 필터 후 처리)
     @Query(value = "SELECT " +
             "r.restaurant_id AS restaurantId, " +
             "r.name AS name, " +
