@@ -18,6 +18,7 @@ import java.util.UUID;
 public class Ai {
 
     @Id
+    @Column(name="ai_id")
     private UUID id;
 
     @Column(nullable = false, length = 500)
