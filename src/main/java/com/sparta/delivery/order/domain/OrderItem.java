@@ -12,10 +12,17 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "p_order_item")
 public class OrderItem {
+
     @Id
-    @GeneratedValue
-    @Column(name = "order_item_id", columnDefinition = "UUID")
+    @Column(name = "order_item_id", columnDefinition = "uuid")
     private UUID id;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+    }
 
     private String menuName;
 
@@ -23,15 +30,15 @@ public class OrderItem {
 
     private int quantity;
 
-    private String options;
+    private String option;
 
     private UUID menuId;
 
-    public OrderItem(String menuName, int menuPrice, int quantity, String options, UUID menuId) {
+    public OrderItem(String menuName, int menuPrice, int quantity, String option, UUID menuId) {
         this.menuName = menuName;
         this.menuPrice = menuPrice;
         this.quantity = quantity;
-        this.options = options;
+        this.option = option;
         this.menuId = menuId;
     }
 

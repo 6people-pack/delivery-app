@@ -3,8 +3,6 @@ package com.sparta.delivery.global.config;
 import com.sparta.delivery.security.filter.JwtAuthorizationFilter;
 import com.sparta.delivery.security.JwtUtil;
 import com.sparta.delivery.security.userdetails.UserDetailsServiceImpl;
-import com.sparta.delivery.user.repository.RefreshTokenRepository;
-import com.sparta.delivery.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -24,8 +22,6 @@ public class WebSecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
-    private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
 
     // 비밀번호 암호화를 위해
     @Bean
@@ -36,7 +32,7 @@ public class WebSecurityConfig {
     // jwt 검증(요청 시 권한 검증)
     @Bean
     public JwtAuthorizationFilter jwtAuthorizationFilter() {
-        return new JwtAuthorizationFilter(jwtUtil, userDetailsService, userRepository, refreshTokenRepository);
+        return new JwtAuthorizationFilter(userDetailsService, jwtUtil);
     }
 
     // security 정책 설정

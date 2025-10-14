@@ -1,7 +1,6 @@
 package com.sparta.delivery.cartitem.domain;
 
 import com.sparta.delivery.global.unit.common.BaseEntity;
-import com.sparta.delivery.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,39 +15,36 @@ import java.util.UUID;
 public class CartItem extends BaseEntity {
 
     @Id
-    @Column(name = "cart_item_id", columnDefinition = "UUID")
+    @Column(name = "cart_item_id", columnDefinition = "uuid")
     private UUID id;
 
-    @PrePersist                 // persist()되기 전(= DB에 저장되기 전) 호출
-    public void generateId() {
-        if (id == null) {
-            id = UUID.randomUUID();
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
         }
     }
 
-    // 사용자와의 관계
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long userId;
 
-    // 메뉴와의 관계
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_id")
-    private TempMenu menu;
+    private UUID menuId;
 
     // 옵션을 컬럼 타입을 text로 저장, json으로 받아서 처리
     @Column(columnDefinition = "TEXT")
-    private String options;
+    private String option;
 
 
     // 수량 같은 추가 정보
     private int quantity;
 
-    public CartItem(User user, TempMenu menu, String options, int quantity) {
-        this.user = user;
-        this.menu = menu;
-        this.options = options;
-        this.quantity = quantity;
+    // 장바구니에 메뉴 생성
+    public static CartItem createCartItem(Long userId, UUID menuId, String option, int quantity) {
+        CartItem cartItem = new CartItem();
+        cartItem.userId = userId;
+        cartItem.menuId = menuId;
+        cartItem.option = option;
+        cartItem.quantity = quantity;
+        return cartItem;
     }
 
     // 수량 증가
@@ -62,8 +58,8 @@ public class CartItem extends BaseEntity {
     }
 
     // 옵션 변경
-    public void updateOptions(String options) {
-        this.options = options;
+    public void updateOptions(String option) {
+        this.option = option;
     }
 
 

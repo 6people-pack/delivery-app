@@ -1,9 +1,6 @@
 package com.sparta.delivery.cartitem.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,11 +12,16 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TempMenu {
 
-    // 임시 엔티티
     @Id
-    @GeneratedValue
-    @Column(name = "menu_id", updatable = false, nullable = false)
+    @Column(name = "menu_id", columnDefinition = "uuid")
     private UUID id;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+    }
 
     @Column(length = 30, nullable = false)
     private String name;

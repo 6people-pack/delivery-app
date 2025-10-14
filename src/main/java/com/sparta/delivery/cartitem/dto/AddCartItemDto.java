@@ -1,13 +1,17 @@
 package com.sparta.delivery.cartitem.dto;
 
-import com.sparta.delivery.cartitem.domain.TempMenu;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.UUID;
 
 public record AddCartItemDto(
 
-        TempMenu menu,
+        @NotNull(message = "메뉴를 찾을 수 없습니다.")
+        UUID menuId,
 
         String option,
 
+        @NotNull(message = "수량을 입력해주세요.")
         int quantity
 
 ) {}
