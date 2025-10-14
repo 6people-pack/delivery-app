@@ -6,6 +6,7 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO}
@@ -25,3 +26,12 @@ jwt:
   expiration:
     access-token: ${JWT_EXPIRATION_ACCESSTOKEN}
     refresh-token: ${JWT_EXPIRATION_REFRESHTOKEN}
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+  client-key: ${TOSS_CLIENT_KEY}
+
+discord:
+  bot:
+    token: ${DISCORD_BOT_TOKEN}
+    channel: ${DISCORD_CHANNEL_ID}
