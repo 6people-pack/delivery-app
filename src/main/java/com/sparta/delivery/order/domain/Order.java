@@ -1,12 +1,9 @@
 package com.sparta.delivery.order.domain;
 
-import com.sparta.delivery.restaurant.domain.Restaurant;
-import com.sparta.delivery.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
@@ -17,20 +14,17 @@ import java.util.UUID;
 public class Order {
 
     @Id
-    @UuidGenerator
-    @Column(name = "order_id", updatable = false, nullable = false)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "order_id", nullable = false, updatable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id", nullable = false)
-    private Restaurant restaurant;
+    @Column(name = "restaurant_id", nullable = false)
+    private UUID restaurantId;
 
-    public Order(User user, Restaurant restaurant) {
-        this.user = user;
-        this.restaurant = restaurant;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    private OrderStatus status;
 }
