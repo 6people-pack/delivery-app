@@ -1,5 +1,4 @@
 package com.sparta.delivery.global.exception.handler;
-
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.global.exception.dto.ErrorResponse;
@@ -36,7 +35,7 @@ public class GlobalExceptionHandler {
                 .path(path)
                 .build());
     }
-    // EntityNotFoundException 처리 (JPA 프록시 객체 관련)d
+    // EntityNotFoundException 처리 (JPA 프록시 객체 관련)
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException e, HttpServletRequest request) {
         String path = request.getMethod() + " " + request.getRequestURI();

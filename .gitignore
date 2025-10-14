@@ -37,4 +37,4 @@ out/
 .vscode/
 
 ### Spring Boot Config ###
-src/main/resources/.env
+.env
