@@ -67,7 +67,7 @@ public class CategoryService {
         List<CategoryResponseDto> categoryList = new ArrayList<>();
         if (!categories.isEmpty()) {
             categoryList = categories.stream()
-                    .map(CategoryResponseDto::new).toList();
+                    .map(CategoryMapper::toCategoryResponseDto).toList();
             for (CategoryResponseDto categoryResponseDto : categoryList) {
                 log.info(categoryResponseDto.toString());
             }
