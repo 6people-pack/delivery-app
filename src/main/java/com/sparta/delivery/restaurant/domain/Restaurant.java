@@ -94,7 +94,7 @@ public class Restaurant extends BaseEntity {
         this.rating = 0.0;
     }
 
-    public void editRestaurant(RestaurantRequestDto requestDto, String description) {
+    public void editRestaurant(RestaurantRequestDto requestDto) {
         this.latitude = requestDto.latitude();
         this.longitude = requestDto.longitude();
         this.address = requestDto.address();
@@ -102,7 +102,7 @@ public class Restaurant extends BaseEntity {
         this.phoneNumber = requestDto.phoneNumber();
         this.businessNumber = requestDto.businessNumber();
         this.name = requestDto.name();
-        this.description = description;
+        this.description = requestDto.description();
         this.minOrderPrice = requestDto.minOrderPrice();
         this.isOpen = requestDto.isOpen();
         this.openTime = requestDto.openTime();
@@ -116,6 +116,7 @@ public class Restaurant extends BaseEntity {
     }
 
     public void deleteRating(Double rating) {
+        // Todo : 리뷰가 하나도 없는 경우 예외처리
         totalRating -= rating;
         reviewCount--;
         this.rating = (double) Math.round((totalRating / reviewCount) * 10) / 10.0;
