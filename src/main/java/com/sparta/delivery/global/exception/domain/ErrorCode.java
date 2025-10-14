@@ -21,6 +21,9 @@ public enum ErrorCode {
 
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
 
+    NOT_OWNER(HttpStatus.UNAUTHORIZED,"식당 주인만이 이용 가능합니다." ),
+    NOT_ADMIN(HttpStatus.UNAUTHORIZED,"관리자만이 이용 가능합니다." ),
+
     // 404 Not Found
     LOGIN_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "로그인 정보와 일치하는 사용자가 존재하지 않습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자가 존재하지 않습니다."),

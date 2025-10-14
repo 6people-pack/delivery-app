@@ -8,6 +8,9 @@ import com.sparta.delivery.ai.dto.AiResponseDto;
 import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
 import com.sparta.delivery.ai.repository.AiRepository;
 import com.sparta.delivery.global.exception.BusinessException;
+import com.sparta.delivery.user.domain.Role;
+import com.sparta.delivery.user.domain.User;
+import com.sparta.delivery.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -36,16 +39,22 @@ public class AiApiService {
 
     private final RestTemplate restTemplate;
     private final AiRepository aiRepository;
+    private final UserRepository userRepository;
 
-    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository) {
-        this.aiRepository = aiRepository;
+    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository) {
         this.restTemplate = builder.build();
+        this.aiRepository = aiRepository;
+        this.userRepository = userRepository;
     }
 
 
     @Transactional
-    public AiSimpleResponseDto getAnswerFromAi(String question) {
+    public AiSimpleResponseDto getAnswerFromAi(Long userId, String question) {
         question += " 답변은 최대한 간결하게 50자 이하로 작성해줘";
+
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if(user.getRole() != Role.OWNER) throw new BusinessException(ErrorCode.NOT_OWNER);
 
         //요청 url 만들기
         URI uri = UriComponentsBuilder
@@ -73,25 +82,28 @@ public class AiApiService {
     }
 
     // 모든 질문과 답변 조회
-    //todo : 검색 기록은 관리자만 가능하도록 권한 추가
-    public AiAllResponseDto getAllChats(String startday, String endday, String word) {
+    public AiAllResponseDto getAllChats(Long userId, String startday, String endday, String word) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
 
-            BooleanBuilder builder  = new BooleanBuilder();
-            QAi ai = QAi.ai;
+        //검색 조건 빌더
+        BooleanBuilder builder  = new BooleanBuilder();
+        QAi ai = QAi.ai;
 
-            if(StringUtils.hasText(startday)) {
-                LocalDateTime sDay = LocalDateTime.of(LocalDate.parse(startday), LocalTime.of(0,0,0));
-                builder.and(ai.createdAt.goe(sDay));
-            }
+        if(StringUtils.hasText(startday)) {
+            LocalDateTime sDay = LocalDateTime.of(LocalDate.parse(startday), LocalTime.of(0,0,0));
+            builder.and(ai.createdAt.goe(sDay));
+        }
 
-            if(StringUtils.hasText(endday)) {
-                LocalDateTime eDay = LocalDateTime.of(LocalDate.parse(endday), LocalTime.of(23,59,59));
-                builder.and(ai.createdAt.loe(eDay));
-            }
+        if(StringUtils.hasText(endday)) {
+            LocalDateTime eDay = LocalDateTime.of(LocalDate.parse(endday), LocalTime.of(23,59,59));
+            builder.and(ai.createdAt.loe(eDay));
+        }
 
-            if(StringUtils.hasText(word)) {
-                builder.and(ai.answer.contains(word));
-            }
+        if(StringUtils.hasText(word)) {
+            builder.and(ai.answer.contains(word));
+        }
 
         List<Ai> aiList = (List<Ai>) aiRepository.findAll(builder, Sort.by(Sort.Order.desc("createdAt")));
 
@@ -101,7 +113,11 @@ public class AiApiService {
         return new AiAllResponseDto(aiResponseDtoList);
     }
 
-    public AiResponseDto getChat(String aiId) {
+    public AiResponseDto getChat(Long userId, String aiId) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
+
         Ai ai = aiRepository.findById(UUID.fromString(aiId)).orElseThrow(()-> new BusinessException(ErrorCode.AI_NOT_FOUND));
         return new AiResponseDto(ai);
     }
