@@ -19,6 +19,7 @@ public record SignUpRequestDto(
 
     @NotBlank(message = "전화번호는 필수 입력값입니다.")
     String phoneNumber
+
 ) {}
 
 /**TODO 요구사항
