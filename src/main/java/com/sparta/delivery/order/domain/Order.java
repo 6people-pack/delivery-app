@@ -87,6 +87,14 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "order_id") // 외래키를 OrderItem 테이블에 생성
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    // 테스트용 더미 생성자
+    public Order(Long userId, UUID restaurantId, String orderNumber, OrderStatus orderStatus) {
+        this.userId = userId;
+        this.restaurantId = restaurantId;
+        this.orderNumber = orderNumber;
+        this.orderStatus = orderStatus;
+    }
+
     public Order(String orderNumber, String address, String addressDetail, Long userId, UUID restaurantId, int grossAmount, int vat, int deliveryFee,
                  int discountAmount, int totalAmount, String customerRequest, List<OrderItem> orderItems, LocalDateTime orderedAt) {
 
