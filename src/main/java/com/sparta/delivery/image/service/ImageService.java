@@ -6,6 +6,8 @@ import com.sparta.delivery.image.domain.Category;
 import com.sparta.delivery.image.domain.Image;
 import com.sparta.delivery.image.dto.*;
 import com.sparta.delivery.image.repository.ImageRepository;
+import com.sparta.delivery.user.domain.User;
+import com.sparta.delivery.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,12 +25,15 @@ import java.util.UUID;
 public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
+    private final UserRepository userRepository;
 
 
 
     //이미지 업로드(다수 가능)
     @Transactional
-    public ImageMultiResponseDto uploadImage(String category, String categoryid, List<MultipartFile> files) {
+    public ImageMultiResponseDto uploadImage(Long userId, String category, String categoryid, List<MultipartFile> files) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
         int count = imageRepository.countByCategoryAndCategoryId(Category.valueOf(category),UUID.fromString(categoryid));
@@ -45,7 +50,9 @@ public class ImageService {
     }
 
     //이미지 단건 조회
-    public String getImage(String category, ImageRequestDto requestDto) {
+    public String getImage(Long userId, String category, ImageRequestDto requestDto) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
         Image image = imageRepository.findByCategoryAndCategoryIdAndIndex(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex())
@@ -54,7 +61,9 @@ public class ImageService {
     }
 
     //이미지 다건 조회
-    public ImageMultiResponseDto getAllImage(String category, String categoryid) {
+    public ImageMultiResponseDto getAllImage(Long userId, String category, String categoryid) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         //해당 카테고리의 객체가 있는지 확인
         List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(Category.valueOf(category), UUID.fromString(categoryid));
@@ -66,7 +75,9 @@ public class ImageService {
 
     // 이미지 수정 : 기존의 이미지를 지우고 다른 이미지 생성
     @Transactional
-    public String updateImage(String category, ImageRequestDto requestDto , MultipartFile file) {
+    public String updateImage(Long userId, String category, ImageRequestDto requestDto , MultipartFile file) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
         Image image = imageRepository.findByCategoryAndCategoryIdAndIndex(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex())
@@ -80,7 +91,9 @@ public class ImageService {
 
     //이미지 순서 조정(인덱스 변경)
     @Transactional
-    public ImageResponseDto changeImageIndex(String category, ImageIndexRequestDto requestDto) {
+    public ImageResponseDto changeImageIndex(Long userId, String category, ImageIndexRequestDto requestDto) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
         Image image = imageRepository.findByCategoryAndCategoryIdAndIndex(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex())
@@ -104,7 +117,9 @@ public class ImageService {
 
     //이미지 삭제
     @Transactional
-    public void deleteImage(String category, ImageRequestDto requestDto) {
+    public void deleteImage(Long userId, String category, ImageRequestDto requestDto) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
         Image image = imageRepository.findByCategoryAndCategoryIdAndIndex(Category.valueOf(category), UUID.fromString(requestDto.getCategoryid()), requestDto.getIndex())
@@ -117,7 +132,9 @@ public class ImageService {
 
     //이미지 다건 삭제
     @Transactional
-    public void deleteAllImage(String category, String categoryid) {
+    public void deleteAllImage(Long userId, String category, String categoryid) {
+        //권한 체크
+        User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if(!Category.isPresent(category)) throw new BusinessException(ErrorCode.INVALID_CATEGORY);
         // 해당 카테고리의 객체가 있는지 확인
 
