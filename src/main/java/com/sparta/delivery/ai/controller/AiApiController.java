@@ -22,11 +22,10 @@ public class AiApiController {
         return BaseResponse.ok(aiApiService.GetAiWithKeywords(userDetails.getUser().getId(),requestDto), BaseStatus.CREATED);
     }
 
-    @PostMapping
-    public BaseResponse<AiSimpleResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                          @RequestBody @Valid AiRequestDto requestDto) {
-        return BaseResponse.ok(aiApiService.getAnswerFromAi(userDetails.getUser().getId(),requestDto.getQuestion()), BaseStatus.CREATED);
-    }
+//    @PostMapping
+//    public BaseResponse<AiSimpleResponseDto> askQuestion (@RequestBody @Valid AiRequestDto requestDto) {
+//        return BaseResponse.ok(aiApiService.getAnswerFromAi(requestDto.getQuestion()), BaseStatus.CREATED);
+//    }
 
     @GetMapping
     public BaseResponse<AiAllResponseDto> getAllChats(@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -36,9 +35,9 @@ public class AiApiController {
         return BaseResponse.ok(aiApiService.getAllChats(userDetails.getUser().getId(),startday, endday,word), BaseStatus.OK);
     }
 
-    @GetMapping("/{ai_id}")
+    @GetMapping("/{aiId}")
     public BaseResponse<AiResponseDto> getChat(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                               @PathVariable("ai_id") String aiId) {
+                                               @PathVariable("aiId") String aiId) {
         return BaseResponse.ok(aiApiService.getChat(userDetails.getUser().getId(),aiId), BaseStatus.OK);
     }
 

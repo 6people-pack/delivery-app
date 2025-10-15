@@ -24,8 +24,8 @@ public class CategoryCheck {
     private final ReviewRepository reviewRepository;
 
     //카테고리에 따른 권한 체크
-    public void checkAuthority(Long userId, Category category, UUID categoryid) {
-        switch (category) {
+    public void checkAuthority(Long userId, ImageCategory imageCategory, UUID categoryid) {
+        switch (imageCategory) {
             case restaurant -> {
                 userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
                 Restaurant restaurant = restaurantRepository.findById(categoryid).orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));

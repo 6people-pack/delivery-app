@@ -20,6 +20,7 @@ public enum ErrorCode {
     S3_FOLDER_NO_FILE(HttpStatus.NOT_FOUND, "S3 폴더에 파일이 존재하지 않습니다."),
     NOT_SEQUENTIAL_INDEX(HttpStatus.BAD_REQUEST,"이미지 인덱스가 맞지 않습니다"),
     MISMATCHED_IMAGE_COUNT(HttpStatus.BAD_REQUEST,"받아온 이미지 개수와 인덱스 개수가 맞지 않습니다." ),
+    NO_USE_CATEGORY(HttpStatus.BAD_REQUEST, "해당 카테고리는 지원하지 않는 컨텐츠입니다."),
 
     //tosspay
     ZERO_AMOUNT_PAYMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "0원 결제는 허용되지 않습니다."),

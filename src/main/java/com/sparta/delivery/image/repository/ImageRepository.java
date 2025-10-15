@@ -1,21 +1,14 @@
 package com.sparta.delivery.image.repository;
 
-import com.sparta.delivery.global.category.Category;
+import com.sparta.delivery.global.category.ImageCategory;
 import com.sparta.delivery.image.domain.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface ImageRepository extends JpaRepository<Image, UUID> {
-    Optional<Image> findByCategoryAndCategoryIdAndIndex(Category category, UUID uuid, int index);
-    List<Image> findAllByCategoryAndCategoryIdOrderByIndexAsc(Category category, UUID uuid);
-     int countByCategoryAndCategoryId(Category category, UUID categoryId);
-
-     List<Image> findAllByCategoryAndCategoryIdAndIndexBetween(Category category, UUID categoryId, int startIndex, int endIndex);
-     List<Image> findAllByCategoryAndCategoryIdAndIndexAfter(Category category, UUID categoryId, int startIndex);
-     void deleteAllByCategoryAndCategoryId(Category category, UUID categoryId);
-
-    Optional<Image> findByUrl(String url);
+    List<Image> findAllByCategoryAndCategoryIdOrderByIndexAsc(ImageCategory imageCategory, UUID uuid);
+     int countByCategoryAndCategoryId(ImageCategory imageCategory, UUID categoryId);
+     void deleteAllByCategoryAndCategoryId(ImageCategory imageCategory, UUID categoryId);
 }
