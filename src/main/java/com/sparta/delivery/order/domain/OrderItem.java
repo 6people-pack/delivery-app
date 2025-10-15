@@ -1,9 +1,11 @@
 package com.sparta.delivery.order.domain;
 
+import com.sparta.delivery.global.unit.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 import java.util.UUID;
 
@@ -11,22 +13,20 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "p_order_item")
-public class OrderItem {
+@Where(clause = "deleted_at IS NULL")
+public class OrderItem extends BaseEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "order_item_id", columnDefinition = "uuid")
     private UUID id;
 
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
-    }
 
     private String menuName;
 
     private int menuPrice;
+
+    private int menuDiscountPrice;
 
     private int quantity;
 
@@ -34,12 +34,15 @@ public class OrderItem {
 
     private UUID menuId;
 
-    public OrderItem(String menuName, int menuPrice, int quantity, String option, UUID menuId) {
-        this.menuName = menuName;
-        this.menuPrice = menuPrice;
-        this.quantity = quantity;
-        this.option = option;
-        this.menuId = menuId;
+    public static OrderItem create(String menuName, int menuPrice, int menuDiscountPrice, int quantity, String option, UUID menuId) {
+        OrderItem item = new OrderItem();
+        item.menuName = menuName;
+        item.menuPrice = menuPrice;
+        item.menuDiscountPrice = menuDiscountPrice;
+        item.quantity = quantity;
+        item.option = option;
+        item.menuId = menuId;
+        return item;
     }
 
 }

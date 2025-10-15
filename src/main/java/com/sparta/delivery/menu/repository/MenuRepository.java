@@ -15,13 +15,15 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     /**
      * 특정 식당(UUID) 기준으로 등록된 모든 메뉴 조회
      */
-    List<Menu> findByRestaurant_Id(UUID restaurantId);
+//    List<Menu> findByRestaurant_Id(UUID restaurantId);
 
     /**
      * 특정 식당 내에서 이름이 같은 메뉴가 이미 존재하는지 확인
      */
-    boolean existsByRestaurant_IdAndName(UUID restaurantId, String name);
+//    boolean existsByRestaurant_IdAndName(UUID restaurantId, String name);
 
-    @Query("select m from Menu m join fetch m.restaurant r where r.id = :restaurantId")
-    List<Menu> findByRestaurantIdWithRestaurant(@Param("restaurantId") UUID restaurantId);
+//    @Query("select m from Menu m join fetch m.restaurantId r where r.id = :restaurantId")
+//    List<Menu> findByRestaurantIdWithRestaurant(@Param("restaurantId") UUID restaurantId);
+
+    List<Menu> findByRestaurantId(UUID restaurantId);
 }
