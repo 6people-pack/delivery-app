@@ -4,12 +4,17 @@ import com.sparta.delivery.review.dto.ReviewCreateRequestDto;
 import com.sparta.delivery.review.dto.ReviewResponseDto;
 import com.sparta.delivery.review.dto.ReviewUpdateRequestDto;
 import com.sparta.delivery.review.service.ReviewService;
+import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.function.EntityResponse;
 
+import java.net.http.HttpResponse;
 import java.util.UUID;
 
 @RestController
@@ -20,10 +25,10 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping("/reviews")
-    public ReviewResponseDto create(@AuthenticationPrincipal(expression = "id") UUID loginUserId,
+    public ReviewResponseDto create(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                     @Valid @RequestBody ReviewCreateRequestDto req) {
-        requireUser(loginUserId);
-        return reviewService.create(loginUserId, req);
+        requireUser(userDetails.getUser().getId());
+        return reviewService.create(userDetails.getUser(), req);
     }
 
     @GetMapping("/reviews/{reviewId}")
@@ -41,21 +46,21 @@ public class ReviewController {
     }
 
     @PatchMapping("/reviews/{reviewId}")
-    public ReviewResponseDto update(@AuthenticationPrincipal(expression = "id") UUID loginUserId,
+    public ReviewResponseDto update(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                     @PathVariable UUID reviewId,
                                     @Valid @RequestBody ReviewUpdateRequestDto req) {
-        requireUser(loginUserId);
-        return reviewService.update(loginUserId, reviewId, req);
+        requireUser(userDetails.getUser().getId());
+        return reviewService.update(userDetails.getUser(), reviewId, req);
     }
 
     @DeleteMapping("/reviews/{reviewId}")
-    public void delete(@AuthenticationPrincipal(expression = "id") UUID loginUserId,
+    public void delete(@AuthenticationPrincipal UserDetailsImpl userDetails,
                        @PathVariable UUID reviewId) {
-        requireUser(loginUserId);
-        reviewService.delete(loginUserId, reviewId);
+        requireUser(userDetails.getUser().getId());
+        reviewService.delete(userDetails.getUser(), reviewId);
     }
 
-    private static void requireUser(UUID loginUserId) {
+    private static void requireUser(Long loginUserId) {
         if (loginUserId == null) {
             throw new IllegalStateException("로그인이 필요합니다.");
         }

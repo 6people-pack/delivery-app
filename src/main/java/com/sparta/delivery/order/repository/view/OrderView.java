@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public interface OrderView {
     UUID getId();
-    UUID getUserId();
+    Long getUserId();
     UUID getRestaurantId();
     OrderStatus getStatus();
 }

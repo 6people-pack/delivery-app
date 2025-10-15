@@ -47,6 +47,9 @@ public class OrderService {
         // 주문 상품
         List<OrderItem> orderItems = new ArrayList<>();
         List<GetCartItemDto> cartItems = cartItemService.getCartItems(user);
+
+        // 테스트용 더미 데이터
+        orderRepository.save(new Order(user.getId(), dto.restaurantId(), orderNumber, OrderStatus.DELIVERED));
 //        UUID restaurantId = cartItems.get(0).menu().getRestaurantId();  // 식당id
 //
 //        for (GetCartItemDto item : cartItems) {
