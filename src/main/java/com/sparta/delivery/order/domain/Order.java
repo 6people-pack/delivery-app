@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,18 +16,14 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "p_order")
+@Where(clause = "deleted_at IS NULL")
 public class Order extends BaseEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "order_id", columnDefinition = "uuid")
     private UUID id;
 
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
-    }
 
     @Column(name = "order_number", length = 30, nullable = false, unique = true)
     private String orderNumber;
@@ -87,24 +84,37 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "order_id") // 외래키를 OrderItem 테이블에 생성
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Order(String orderNumber, String address, String addressDetail, Long userId, UUID restaurantId, int grossAmount, int vat, int deliveryFee,
-                 int discountAmount, int totalAmount, String customerRequest, List<OrderItem> orderItems, LocalDateTime orderedAt) {
-
-        this.orderNumber = orderNumber;
-        this.orderStatus = OrderStatus.REQUESTED;
-        this.address = address;
-        this.addressDetail = addressDetail;
-        this.userId = userId;
-        this.restaurantId = restaurantId;
-        this.grossAmount = grossAmount;
-        this.vat = vat;
-        this.deliveryFee = deliveryFee;
-        this.discountAmount = discountAmount;
-        this.totalAmount = totalAmount;
-        this.customerRequest = customerRequest;
-        this.orderItems = orderItems;
-        this.orderedAt = orderedAt;
-
+    public static Order create(
+            String orderNumber,
+            String address,
+            String addressDetail,
+            Long userId,
+            UUID restaurantId,
+            int grossAmount,
+            int vat,
+            int deliveryFee,
+            int discountAmount,
+            int totalAmount,
+            String customerRequest,
+            List<OrderItem> orderItems,
+            LocalDateTime orderedAt
+    ) {
+        Order order = new Order();
+        order.orderNumber = orderNumber;
+        order.orderStatus = OrderStatus.REQUESTED; // 초기 상태
+        order.address = address;
+        order.addressDetail = addressDetail;
+        order.userId = userId;
+        order.restaurantId = restaurantId;
+        order.grossAmount = grossAmount;
+        order.vat = vat;
+        order.deliveryFee = deliveryFee;
+        order.discountAmount = discountAmount;
+        order.totalAmount = totalAmount;
+        order.customerRequest = customerRequest;
+        order.orderItems = orderItems;
+        order.orderedAt = orderedAt;
+        return order;
     }
 
     public void changeStatusAccepted() {
