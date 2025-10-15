@@ -1,7 +1,7 @@
 package com.sparta.delivery.global.config;
 
 import com.sparta.delivery.security.filter.JwtAuthorizationFilter;
-import com.sparta.delivery.security.JwtUtil;
+import com.sparta.delivery.security.jwt.utils.JwtUtil;
 import com.sparta.delivery.security.userdetails.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -52,6 +52,7 @@ public class WebSecurityConfig {
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() // resources 접근 허용 설정
                         .requestMatchers("/api/user/signup", "/api/user/login","/toss.html","/api/payments/confirm", "/api/payments/fail").permitAll() // 회원가입, 로그인 접근 허용
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
+
         );
 
 

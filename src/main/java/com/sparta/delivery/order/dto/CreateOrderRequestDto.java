@@ -2,7 +2,7 @@ package com.sparta.delivery.order.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record CreateOrderDto(
+public record CreateOrderRequestDto(
         @NotBlank(message = "주소를 입력하세요.")
         String address,
 
