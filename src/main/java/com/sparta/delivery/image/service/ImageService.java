@@ -74,14 +74,16 @@ public class ImageService {
             throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
 
         //이미지 삭제
-        List<ImageDDto> delete = requestDto.getDelete();
-        for (ImageDDto imageDDto : delete) {
-            String url = imageDDto.getUrl();
-            Image image = imageRepository.findById(UUID.fromString(url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("."))))
-                    .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
-            s3Service.deleteImage(url);
-            imageRepository.delete(image);
-        }
+        List<String> urls = requestDto.getDelete().stream().map(ImageDDto::getUrl).toList();
+        List<UUID> ids = urls.stream().map(url ->UUID.fromString(url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf(".")))).toList();
+        List<Image> dImages = imageRepository.findAllById(ids);
+
+        //받은 url개수와 찾은 이미지 개수가 다르면 이미지를 못찾은 것
+        if(dImages.size() != ids.size()) throw new BusinessException(ErrorCode.IMAGE_NOT_FOUND);
+
+        s3Service.deleteImages(urls);
+        imageRepository.deleteAll(dImages);
+
 
         //기존 이미지 인덱스 수정
         List<ImageUDto> update = requestDto.getUpdate();
@@ -93,15 +95,16 @@ public class ImageService {
 
         //새로운 이미지 업로드
         List<ImageCDto> create = requestDto.getCreate();
+        List<Image> cImages = new ArrayList<>(create.size());
         if(create.size() != files.size()) throw new BusinessException(ErrorCode.MISMATCHED_IMAGE_COUNT);
         for(int i = 0; i < create.size(); i++) {
             UUID imageId = UUID.randomUUID();
             //s3업로드
             String imageUrl = s3Service.uploadImage(imageCategory.toString(), categoryid.toString(), files.get(i), imageId.toString());
-            //db업로드
-            Image image = new Image(imageId, imageCategory, categoryid, imageUrl, create.get(i).getIndex());
-            imageRepository.save(image);
+            cImages.add(new Image(imageId, imageCategory, categoryid, imageUrl, create.get(i).getIndex()));
         }
+        //db업로드
+        imageRepository.saveAll(cImages);
 
         //인덱스 맞는지 확인
         List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(imageCategory, categoryid);

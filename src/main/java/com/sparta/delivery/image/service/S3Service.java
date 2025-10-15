@@ -21,6 +21,7 @@ import java.util.List;
 public class S3Service {
 
     private final S3Client amazonS3Client;
+    private final S3Client s3Client;
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
@@ -44,18 +45,6 @@ public class S3Service {
             return url.toString();
         }catch (IOException e) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
-        }
-    }
-
-    public void deleteImage(String imageUrl) {
-        try {
-            String fileName = imageUrl.substring(imageUrl.lastIndexOf(".com/") + 5);
-            amazonS3Client.deleteObject(DeleteObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(fileName)
-                    .build());
-        }catch (Exception e) {
-            throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
         }
     }
 
@@ -87,4 +76,31 @@ public class S3Service {
 
         log.info("Deleted {} objects under prefix '{}'", toDelete.size(), prefix);
     }
+
+    public void deleteImages(List<String> urls) {
+        if (urls.isEmpty()) return;
+
+        List<ObjectIdentifier> objects = urls.stream()
+                .map(url -> ObjectIdentifier.builder()
+                        .key(url.substring(url.lastIndexOf(".com/") + 5))
+                        .build()
+                )
+                .toList();
+        try {
+            DeleteObjectsResponse res = s3Client.deleteObjects(
+                    DeleteObjectsRequest.builder()
+                            .bucket(bucket)
+                            .delete(Delete.builder().objects(objects).build())
+                            .build()
+            );
+
+            // 성공한 항목 목록 확인 가능
+            List<DeletedObject> deleted = res.deleted();
+            System.out.println("Deleted " + deleted.size() + " objects from S3.");
+        }catch (S3Exception e) {
+            // 실패 시 여기로 들어옴
+            throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
+        }
+    }
+
 }
