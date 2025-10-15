@@ -11,5 +11,5 @@ import java.util.UUID;
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
     Page<Review> findByRestaurantIdAndDeletedAtIsNull(UUID restaurantId, Pageable pageable);
     Optional<Review> findByIdAndDeletedAtIsNull(UUID id);
-    boolean existsByOrderIdAndUserId(UUID orderId, UUID userId);
+    boolean existsByOrderIdAndUserId(UUID orderId, Long userId);
 }
