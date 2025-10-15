@@ -20,13 +20,13 @@ public class ImageController {
     private final ImageService imageService;
 
     //이미지 추가(다수 가능)
-//    @PostMapping("/{category}" )
-//    public BaseResponse<ImageMultiResponseDto> uploadImage(@AuthenticationPrincipal UserDetailsImpl userDetails,
-//                                                           @RequestPart("files") List<MultipartFile> files,
-//                                                           @PathVariable String category,
-//                                                           @RequestPart("categoryid") String categoryid) {
-//        return BaseResponse.ok(imageService.uploadImage(userDetails.getUser().getId(), category,categoryid, files), BaseStatus.CREATED);
-//    }
+    @PostMapping("/{category}" )
+    public BaseResponse<ImageMultiResponseDto> uploadImage(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                           @RequestPart("files") List<MultipartFile> files,
+                                                           @PathVariable String category,
+                                                           @RequestPart("categoryid") String categoryid) {
+        return BaseResponse.ok(imageService.uploadImages(userDetails.getUser().getId(), category,categoryid, files), BaseStatus.CREATED);
+    }
 
     //이미지 조회
 //    @GetMapping("/{category}")
