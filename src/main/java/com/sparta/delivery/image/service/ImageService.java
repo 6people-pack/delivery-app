@@ -5,13 +5,10 @@ import com.sparta.delivery.global.category.ImageCategory;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.image.domain.Image;
-import com.sparta.delivery.image.dto.ImageMultiResponseDto;
-import com.sparta.delivery.image.dto.ImageSimpleResponseDto;
+import com.sparta.delivery.image.dto.*;
 import com.sparta.delivery.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -64,24 +61,22 @@ public class ImageService {
 
     //이미지 다건 수정
     //todo : 오류 발생시 s3와 db 불일치 문제 해결
-    //todo : requestDto를 json형태인지 requestDto로 하는지 고민
     @Transactional
-    public ImageMultiResponseDto updateAllImage(Long userId,String requestDto , List<MultipartFile> files) {
-        JSONObject jsonObject = new JSONObject(requestDto);
-        ImageCategory imageCategory = ImageCategory.valueOf(jsonObject.getString("category"));
-        UUID categoryid = UUID.fromString(jsonObject.getString("categoryId"));
+    public ImageMultiResponseDto updateAllImage(Long userId, ImageUpdateRequestDto requestDto , List<MultipartFile> files) {
+        ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
+        UUID categoryid = UUID.fromString(requestDto.getCategoryId());
 
         //권한 체크
         categoryCheck.checkAuthority(userId, imageCategory, categoryid);
 
         //기존에 남아있는 이미지와 새로 업로드할 이미지의 합이 10개를 넘지 않는지 확인
-        if(jsonObject.getJSONArray("update").length() + jsonObject.getJSONArray("create").length() > MAX_IMAGE_COUNT)
+        if(requestDto.getUpdate().size() + requestDto.getCreate().size() > MAX_IMAGE_COUNT)
             throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
 
         //이미지 삭제
-        JSONArray delete = jsonObject.getJSONArray("delete");
-        for(int i = 0; i < delete.length(); i++) {
-            String url = delete.getJSONObject(i).getString("url");
+        List<ImageDDto> delete = requestDto.getDelete();
+        for (ImageDDto imageDDto : delete) {
+            String url = imageDDto.getUrl();
             Image image = imageRepository.findById(UUID.fromString(url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("."))))
                     .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
             s3Service.deleteImage(url);
@@ -89,22 +84,22 @@ public class ImageService {
         }
 
         //기존 이미지 인덱스 수정
-        JSONArray update = jsonObject.getJSONArray("update");
-        for(int i = 0; i < update.length(); i++) {
-            Image image = imageRepository.findById(UUID.fromString(update.getJSONObject(i).getString("imageId")))
+        List<ImageUDto> update = requestDto.getUpdate();
+        for (ImageUDto imageUDto : update) {
+            Image image = imageRepository.findById(UUID.fromString(imageUDto.getImageId()))
                     .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
-            image.updateIndex(update.getJSONObject(i).getInt("index"));
+            image.updateIndex(imageUDto.getIndex());
         }
 
         //새로운 이미지 업로드
-        JSONArray create = jsonObject.getJSONArray("create");
-        if(create.length() != files.size()) throw new BusinessException(ErrorCode.MISMATCHED_IMAGE_COUNT);
-        for(int i = 0; i < create.length(); i++) {
+        List<ImageCDto> create = requestDto.getCreate();
+        if(create.size() != files.size()) throw new BusinessException(ErrorCode.MISMATCHED_IMAGE_COUNT);
+        for(int i = 0; i < create.size(); i++) {
             UUID imageId = UUID.randomUUID();
             //s3업로드
             String imageUrl = s3Service.uploadImage(imageCategory.toString(), categoryid.toString(), files.get(i), imageId.toString());
             //db업로드
-            Image image = new Image(imageId, imageCategory, categoryid, imageUrl, create.getJSONObject(i).getInt("index"));
+            Image image = new Image(imageId, imageCategory, categoryid, imageUrl, create.get(i).getIndex());
             imageRepository.save(image);
         }
 
