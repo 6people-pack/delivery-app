@@ -1,5 +1,6 @@
 package com.sparta.delivery.image.domain;
 
+import com.sparta.delivery.global.category.ImageCategory;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,7 @@ public class Image {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Category category;
+    private ImageCategory category;
 
     @Column(nullable = false)
     private UUID categoryId;
@@ -30,7 +31,7 @@ public class Image {
     @Column(nullable = false)
     private int index;
 
-    public Image(UUID id, Category category, UUID categoryId, String url, int index) {
+    public Image(UUID id, ImageCategory category, UUID categoryId, String url, int index) {
         this.id = id;
         this.category = category;
         this.categoryId = categoryId;
@@ -41,13 +42,5 @@ public class Image {
 
     public void updateIndex(int newIndex) {
         this.index = newIndex;
-    }
-
-    public void increaseIndex() {
-        this.index ++;
-    }
-
-    public void decreaseIndex() {
-        this.index --;
     }
 }
