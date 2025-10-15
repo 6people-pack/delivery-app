@@ -1,7 +1,10 @@
 package com.sparta.delivery.restaurant.service;
 
+import com.sparta.delivery.category.repository.CategoryRepository;
+import com.sparta.delivery.global.category.ImageCategory;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
+import com.sparta.delivery.image.service.ImageService;
 import com.sparta.delivery.restaurant.domain.RatingStatus;
 import com.sparta.delivery.restaurant.domain.Restaurant;
 import com.sparta.delivery.restaurant.domain.RestaurantCategory;
@@ -31,6 +34,8 @@ public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final RestaurantCategoryRepository restaurantCategoryRepository;
+    private final CategoryRepository categoryRepository;
+    private final ImageService imageService;
 
     // 식당 등록
     @Transactional
@@ -40,20 +45,19 @@ public class RestaurantService {
             throw new BusinessException(ErrorCode.BUSINESS_CODE_EXISTS);
         }
 
-        // Todo : 이미지 저장
         Restaurant restaurant = RestaurantMapper.toRestaurant(user.getId(), requestDto);
         restaurantRepository.save(restaurant);
 
-        ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
-        for (UUID category : requestDto.categories()) {
-            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(restaurant, category));
-        }
-        restaurantCategoryRepository.saveAll(allCategories);
+        // 이미지 업로드
+        imageService.uploadImage(ImageCategory.restaurant, restaurant.getId(), restaurantImage);
+
+        // 식당_카테고리 저장
+        saveRestaurantCategory(requestDto, restaurant);
     }
 
     // 식당 수정
     @Transactional
-    public void editRestaurant(User user, RestaurantRequestDto requestDto, UUID restaurantId, List<MultipartFile> restaurantImage) {
+    public void editRestaurant(User user, RestaurantRequestDto requestDto, UUID restaurantId) {
 //        validateUser(user);
         Restaurant findRestaurant = restaurantRepository.findByIdAndOwnerIdAndDeletedAtIsNull(restaurantId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
@@ -62,18 +66,11 @@ public class RestaurantService {
         if (restaurantRepository.existsByBusinessNumberAndIdNot(requestDto.businessNumber(), restaurantId)) {
             throw new BusinessException(ErrorCode.BUSINESS_CODE_EXISTS);
         }
-
-        // Todo : 이미지 수정
         findRestaurant.editRestaurant(requestDto);
 
         // 기존 식당_카테고리 삭제후 재생성
         restaurantCategoryRepository.deleteAllByRestaurant(findRestaurant);
-        ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
-
-        for (UUID category : requestDto.categories()) {
-            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(findRestaurant, category));
-        }
-        restaurantCategoryRepository.saveAll(allCategories);
+        saveRestaurantCategory(requestDto, findRestaurant);
     }
 
     // 식당 삭제
@@ -82,6 +79,9 @@ public class RestaurantService {
 //        validateUser(user);
         Restaurant findRestaurant = restaurantRepository.findByIdAndOwnerIdAndDeletedAtIsNull(restaurantId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+
+        // 연관된 이미지 삭제
+        imageService.deleteAllImage(ImageCategory.restaurant, findRestaurant.getId());
         findRestaurant.delete(user.getId());
     }
 
@@ -163,6 +163,15 @@ public class RestaurantService {
         if (!user.getRole().equals(Role.OWNER)) {
             throw new BusinessException(ErrorCode.ROLE_AUTHORIZATION_REQUIRED);
         }
+    }
+
+    private void saveRestaurantCategory(RestaurantRequestDto requestDto, Restaurant findRestaurant) {
+        ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
+        for (UUID category : requestDto.categories()) {
+            if (!categoryRepository.existsById(category)) throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(findRestaurant, category));
+        }
+        restaurantCategoryRepository.saveAll(allCategories);
     }
 
 }

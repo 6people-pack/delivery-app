@@ -2,6 +2,7 @@ package com.sparta.delivery.restaurant.controller;
 
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
+import com.sparta.delivery.restaurant.domain.SortRestaurant;
 import com.sparta.delivery.restaurant.dto.RatingRequestDto;
 import com.sparta.delivery.restaurant.dto.RestaurantRequestDto;
 import com.sparta.delivery.restaurant.service.RestaurantService;
@@ -28,7 +29,7 @@ public class RestaurantController {
     @PostMapping("/restaurants")
     public BaseResponse<?> createRestaurant(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                             @RequestPart(value = "restaurantImage", required = false) List<MultipartFile> restaurantImage,
-                                            @RequestBody @Valid RestaurantRequestDto requestDto) {
+                                            @Valid @RequestPart(value = "restaurantInfo") RestaurantRequestDto requestDto) {
         restaurantService.createRestaurant(userDetails.getUser(), requestDto, restaurantImage);
         return BaseResponse.ok(BaseStatus.CREATED);
     }
@@ -37,10 +38,9 @@ public class RestaurantController {
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/restaurants/{restaurantId}")
     public BaseResponse<?> editRestaurant(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                          @RequestBody @Valid RestaurantRequestDto requestDto,
-                                          @RequestPart(value = "restaurantImage", required = false) List<MultipartFile> restaurantImage,
+                                          @Valid @RequestBody RestaurantRequestDto requestDto,
                                           @PathVariable UUID restaurantId) {
-        restaurantService.editRestaurant(userDetails.getUser(), requestDto, restaurantId, restaurantImage);
+        restaurantService.editRestaurant(userDetails.getUser(), requestDto, restaurantId);
         return BaseResponse.ok(BaseStatus.OK);
     }
 
@@ -65,12 +65,12 @@ public class RestaurantController {
     @GetMapping("/restaurants/list")
     public BaseResponse<?> getAllRestaurants(@RequestParam(defaultValue = "0", required = false) int page,
                                              @RequestParam(defaultValue = "20", required = false) int size,
-                                             @RequestParam(defaultValue = "rating", required = false) String sortBy,
+                                             @RequestParam(defaultValue = "rating", required = false) SortRestaurant sortBy,
                                              @RequestParam(value = "category", required = false) UUID category,
                                              @RequestParam(value = "name", required = false) String name,
                                              @RequestParam(value = "lat") Double lat,
                                              @RequestParam(value = "lon") Double lon) {
-        return BaseResponse.ok(restaurantService.getAllRestaurants(page, size, sortBy, category, name, lat, lon), BaseStatus.OK);
+        return BaseResponse.ok(restaurantService.getAllRestaurants(page, size, sortBy.toString(), category, name, lat, lon), BaseStatus.OK);
     }
 
     // 식당 상세 조회

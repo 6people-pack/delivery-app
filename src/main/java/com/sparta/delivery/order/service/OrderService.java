@@ -140,32 +140,6 @@ public class OrderService {
         }).toList(); // 모든 주문 DTO를 리스트로 변환
 
         return responseDtos;
-
-//        List<GetOrderResponseDto> responseDtos = new ArrayList<>(); // 반환할 주문dto 리스트 형태
-//        List<Order> orders = orderRepository.findByUserId(user.getId()); // 먼저 db에 있는 주문들 정보 가져옴
-//
-//        for  (Order order : orders) { // 주문별 처리 로직
-//            List<GetOrderItemResponseDto> orderItemDtos = new ArrayList<>(); // 주문 아이템 dto 리스트를 생성
-//
-//            List<OrderItem> orderItems = order.getOrderItems();         // db에서 주문에 해당하는 상품 가져옴
-//            for(OrderItem orderItem : orderItems) {                 // db에 있는 주문 상품을 dto로 변환하고 리스트에 담음
-//                orderItemDtos.add(new GetOrderItemResponseDto(
-//                        orderItem.getMenuName(),
-//                        orderItem.getQuantity(),
-//                        orderItem.getOption()
-//                ));
-//            }
-//
-//            responseDtos.add(new GetOrderResponseDto(                     // db의 주문 정보를 dto로 변환 후 리스트에 담음
-//                    order.getOrderedAt(),
-//                    order.getOrderStatus(),
-//                    order.getRestaurantId(),
-//                    order.getTotalAmount(),
-//                    orderItemDtos
-//            ));
-//        }
-//
-//        return responseDtos;
     }
 
     // 주문 상세(조회)
