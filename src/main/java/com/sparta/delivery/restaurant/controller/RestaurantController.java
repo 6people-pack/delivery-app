@@ -37,10 +37,9 @@ public class RestaurantController {
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/restaurants/{restaurantId}")
     public BaseResponse<?> editRestaurant(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                          @RequestPart(value = "restaurantImage", required = false) List<MultipartFile> restaurantImage,
-                                          @Valid @RequestPart(value = "restaurantInfo") RestaurantRequestDto requestDto,
+                                          @Valid @RequestBody RestaurantRequestDto requestDto,
                                           @PathVariable UUID restaurantId) {
-        restaurantService.editRestaurant(userDetails.getUser(), requestDto, restaurantId, restaurantImage);
+        restaurantService.editRestaurant(userDetails.getUser(), requestDto, restaurantId);
         return BaseResponse.ok(BaseStatus.OK);
     }
 

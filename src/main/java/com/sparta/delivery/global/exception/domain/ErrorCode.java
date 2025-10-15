@@ -61,6 +61,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 주문이 존재하지 않습니다."),
     NOT_FIND_INQUIRY(HttpStatus.NOT_FOUND, "문의 정보가 존재하지 않습니다."),
     AI_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 ai사용 기록이 존재하지 않습니다."),
+    RATING_NOT_FOUND(HttpStatus.NOT_FOUND, "삭제할 별점이 존재하지 않습니다"),
 
     //409
     NICKNAME_ALREADY_EXISTS(HttpStatus.NOT_FOUND, "해당 닉네임은 이미 존재합니다."),
