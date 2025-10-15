@@ -45,7 +45,7 @@ public class Comment extends BaseEntity {
         this.author = author;
         this.review = review;
         this.inquiry = inquiry;
-        this.parent = parent;
+//        this.parent = parent;  //대댓 주석 해제
         // 런타임 방어(DDL에서 2중 보증)
         if ((review == null && inquiry == null) || (review != null && inquiry != null)) {
             throw new IllegalArgumentException("리뷰/문의 중 하나에만 연결되어야 합니다.");
