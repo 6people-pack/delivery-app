@@ -5,10 +5,10 @@ import com.sparta.delivery.ai.domain.Ai;
 import com.sparta.delivery.ai.domain.QAi;
 import com.sparta.delivery.ai.dto.*;
 import com.sparta.delivery.ai.repository.AiRepository;
-import com.sparta.delivery.global.category.Category;
 import com.sparta.delivery.global.category.CategoryCheck;
+import com.sparta.delivery.global.category.ImageCategory;
 import com.sparta.delivery.global.exception.BusinessException;
-import com.sparta.delivery.restaurant.repository.RestaurantRepository;
+import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.repository.UserRepository;
@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import com.sparta.delivery.global.exception.domain.ErrorCode;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -35,7 +34,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
+
 public class AiApiService {
 
     private final RestTemplate restTemplate;
@@ -43,47 +42,38 @@ public class AiApiService {
     private final UserRepository userRepository;
     private final CategoryCheck categoryCheck;
 
-    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository, RestaurantRepository restaurantRepository, CategoryCheck categoryCheck) {
+    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository, CategoryCheck categoryCheck) {
         this.restTemplate = builder.build();
         this.aiRepository = aiRepository;
         this.userRepository = userRepository;
         this.categoryCheck = categoryCheck;
     }
-
     public AiSimpleResponseDto GetAiWithKeywords(Long userId, AiKeywordsRequestDto requestDto) {
-//    categoryCheck.checkAuthority(userId, Category.valueOf(requestDto.getCategory()), UUID.fromString(requestDto.getCategoryId()));
-//    if(Category.valueOf(requestDto.getCategory()).equals(Category.restaurant)) {
-////        String question = "나는 음식점 사장이다. 내 음식점의 이름은 " + requestDto.getName() + " 이고, " +
-////                "내 음식점의 대표 메뉴는 " + requestDto.getMenu() + " 이다. " +
-////                "내 음식점의 장점은 " + requestDto.getAdvantage() + " 이다. " +
-////                "이 음식점을 홍보하기 위한 한줄 광고 문구를 만들어줘";
-////        return getAnswerFromAi(userId, question);
-//    } else if (Category.valueOf(requestDto.getCategory()).equals(Category.menu)) {
-//        String question = "나는 음식점 사장이다. 이 메뉴의 이름은 " + requestDto.getKeywords() + " 이고,  " +
-//                "음식 종류는 " + requestDto.getCategoryId() + " 이다. " +
-//                "주요 재로는 " + requestDto.getMenu() + " 이며, " +
-//                "가장 큰 특징은 "  + requestDto.getAdvantage() + " 다는 점이다.  " +
-//                "이 메뉴를 홍보하기 위한 한줄 광고 문구를 만들어줘";
-//
-//    } else {
-//        String question = "나는 리뷰를 쓰는 리뷰어다. 이 음식의 이름은 " + requestDto.getName() + " 이고, " +
-//                "내가 먹은 메뉴는 " + requestDto.getMenu() + " 이다. " +
-//                "이 음식의 장점은 " + requestDto.getAdvantage() + " 이고, 단점은  "+requestDto.getAdvantage()+ " 이다. " +
-//                "이 음식에 대한 리뷰를 50자 이하로 작성해줘";
-//    }
-
-        return null;
+        ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
+        UUID categoryId = UUID.fromString(requestDto.getCategoryId());
+        categoryCheck.checkAuthority(userId, imageCategory, categoryId);
+        if(imageCategory.equals(ImageCategory.restaurant)) {
+            RestaurantKeywords keywords = (RestaurantKeywords) requestDto.getKeywords();
+            String question = "나는 음식점 사장이야. 내 음식점의 이름은 " + keywords.name() + " 이고, " +
+                    "내 음식점의 대표 메뉴는 " + keywords.mainDish() + " 야. " +
+                    "내 음식점의 장점은 " + keywords.advantage() + " 이지. " +
+                    keywords.highlight() + "한다는 점을 중점으로 이 음식점을 홍보하기 위한 한줄 설명 문구를 만들어줘";
+            return getAnswerFromAi(question);
+        } else if (ImageCategory.valueOf(requestDto.getCategory()).equals(ImageCategory.menu)) {
+            MenuKeywords keywords = (MenuKeywords) requestDto.getKeywords();
+            String question = "나는 음식점 사장이야. 이 메뉴의 이름은 " + keywords.name() + " 이고,  " +
+                    "음식 종류는 " + keywords.category() + " 이고. " +
+                    "주재료는 " + keywords.mainIngredient() + " 이야, " +
+                    keywords.highlight() + "한다는 점을 중점으로 이 음식점을 홍보하기 위한 한줄 설명 문구를 만들어줘";
+            return getAnswerFromAi(question);
+        } else {
+            throw new BusinessException(ErrorCode.NO_USE_CATEGORY);
+        }
     }
 
 
     @Transactional
-    public AiSimpleResponseDto getAnswerFromAi(Long userId, String question) {
-        question += " 답변은 최대한 간결하게 50자 이하로 작성해줘";
-
-        //권한 체크
-        User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-//        if(user.getRole() != Role.OWNER) throw new BusinessException(ErrorCode.NOT_OWNER);
-
+    public AiSimpleResponseDto getAnswerFromAi(String question) {
         //요청 url 만들기
         URI uri = UriComponentsBuilder
                 .fromUriString("https://generativelanguage.googleapis.com")
@@ -111,6 +101,7 @@ public class AiApiService {
 
 
     // 모든 질문과 답변 조회
+    @Transactional(readOnly = true)
     public AiAllResponseDto getAllChats(Long userId, String startday, String endday, String word) {
         //권한 체크
         User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -142,6 +133,7 @@ public class AiApiService {
         return new AiAllResponseDto(aiResponseDtoList);
     }
 
+    @Transactional(readOnly = true)
     public AiResponseDto getChat(Long userId, String aiId) {
         //권한 체크
         User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
