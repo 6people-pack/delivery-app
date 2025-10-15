@@ -3,11 +3,12 @@ package com.sparta.delivery.ai.service;
 import com.querydsl.core.BooleanBuilder;
 import com.sparta.delivery.ai.domain.Ai;
 import com.sparta.delivery.ai.domain.QAi;
-import com.sparta.delivery.ai.dto.AiAllResponseDto;
-import com.sparta.delivery.ai.dto.AiResponseDto;
-import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
+import com.sparta.delivery.ai.dto.*;
 import com.sparta.delivery.ai.repository.AiRepository;
+import com.sparta.delivery.global.category.Category;
+import com.sparta.delivery.global.category.CategoryCheck;
 import com.sparta.delivery.global.exception.BusinessException;
+import com.sparta.delivery.restaurant.repository.RestaurantRepository;
 import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.repository.UserRepository;
@@ -40,11 +41,38 @@ public class AiApiService {
     private final RestTemplate restTemplate;
     private final AiRepository aiRepository;
     private final UserRepository userRepository;
+    private final CategoryCheck categoryCheck;
 
-    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository) {
+    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository, RestaurantRepository restaurantRepository, CategoryCheck categoryCheck) {
         this.restTemplate = builder.build();
         this.aiRepository = aiRepository;
         this.userRepository = userRepository;
+        this.categoryCheck = categoryCheck;
+    }
+
+    public AiSimpleResponseDto GetAiWithKeywords(Long userId, AiKeywordsRequestDto requestDto) {
+//    categoryCheck.checkAuthority(userId, Category.valueOf(requestDto.getCategory()), UUID.fromString(requestDto.getCategoryId()));
+//    if(Category.valueOf(requestDto.getCategory()).equals(Category.restaurant)) {
+////        String question = "나는 음식점 사장이다. 내 음식점의 이름은 " + requestDto.getName() + " 이고, " +
+////                "내 음식점의 대표 메뉴는 " + requestDto.getMenu() + " 이다. " +
+////                "내 음식점의 장점은 " + requestDto.getAdvantage() + " 이다. " +
+////                "이 음식점을 홍보하기 위한 한줄 광고 문구를 만들어줘";
+////        return getAnswerFromAi(userId, question);
+//    } else if (Category.valueOf(requestDto.getCategory()).equals(Category.menu)) {
+//        String question = "나는 음식점 사장이다. 이 메뉴의 이름은 " + requestDto.getKeywords() + " 이고,  " +
+//                "음식 종류는 " + requestDto.getCategoryId() + " 이다. " +
+//                "주요 재로는 " + requestDto.getMenu() + " 이며, " +
+//                "가장 큰 특징은 "  + requestDto.getAdvantage() + " 다는 점이다.  " +
+//                "이 메뉴를 홍보하기 위한 한줄 광고 문구를 만들어줘";
+//
+//    } else {
+//        String question = "나는 리뷰를 쓰는 리뷰어다. 이 음식의 이름은 " + requestDto.getName() + " 이고, " +
+//                "내가 먹은 메뉴는 " + requestDto.getMenu() + " 이다. " +
+//                "이 음식의 장점은 " + requestDto.getAdvantage() + " 이고, 단점은  "+requestDto.getAdvantage()+ " 이다. " +
+//                "이 음식에 대한 리뷰를 50자 이하로 작성해줘";
+//    }
+
+        return null;
     }
 
 
@@ -81,11 +109,12 @@ public class AiApiService {
         return new AiSimpleResponseDto(answer);
     }
 
+
     // 모든 질문과 답변 조회
     public AiAllResponseDto getAllChats(Long userId, String startday, String endday, String word) {
         //권한 체크
         User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-//        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
+        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
 
         //검색 조건 빌더
         BooleanBuilder builder  = new BooleanBuilder();
@@ -116,7 +145,7 @@ public class AiApiService {
     public AiResponseDto getChat(Long userId, String aiId) {
         //권한 체크
         User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-//        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
+        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
 
         Ai ai = aiRepository.findById(UUID.fromString(aiId)).orElseThrow(()-> new BusinessException(ErrorCode.AI_NOT_FOUND));
         return new AiResponseDto(ai);

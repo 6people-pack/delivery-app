@@ -1,6 +1,6 @@
 package com.sparta.delivery.image.repository;
 
-import com.sparta.delivery.image.domain.Category;
+import com.sparta.delivery.global.category.Category;
 import com.sparta.delivery.image.domain.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -1,18 +1,13 @@
 package com.sparta.delivery.image.service;
 
+import com.sparta.delivery.global.category.Category;
+import com.sparta.delivery.global.category.CategoryCheck;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
-import com.sparta.delivery.image.domain.Category;
 import com.sparta.delivery.image.domain.Image;
 import com.sparta.delivery.image.dto.ImageMultiResponseDto;
 import com.sparta.delivery.image.dto.ImageSimpleResponseDto;
 import com.sparta.delivery.image.repository.ImageRepository;
-import com.sparta.delivery.menu.domain.Menu;
-import com.sparta.delivery.menu.repository.MenuRepository;
-import com.sparta.delivery.restaurant.domain.Restaurant;
-import com.sparta.delivery.restaurant.repository.RestaurantRepository;
-import com.sparta.delivery.review.domain.Review;
-import com.sparta.delivery.review.repository.ReviewRepository;
 import com.sparta.delivery.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +29,7 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
     private final UserRepository userRepository;
-    private final RestaurantRepository restaurantRepository;
-    private final MenuRepository menuRepository;
-    private final ReviewRepository reviewRepository;
+    private final CategoryCheck categoryCheck;
 
     private final int MAX_IMAGE_COUNT = 10;
 
@@ -58,8 +51,7 @@ public class ImageService {
     }
 
     //이미지 다건 조회 - 권한 체크 x
-    public ImageMultiResponseDto getAllImage(Long userId, String category, String categoryid) {
-        userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    public ImageMultiResponseDto getAllImage( String category, String categoryid) {
         //해당 카테고리의 객체가 있는지 확인
         List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(Category.valueOf(category), UUID.fromString(categoryid));
         if(images.isEmpty()) {
@@ -81,7 +73,7 @@ public class ImageService {
         UUID categoryid = UUID.fromString(jsonObject.getString("categoryId"));
 
         //권한 체크
-        checkAuthority(userId, category, categoryid);
+        categoryCheck.checkAuthority(userId, category, categoryid);
 
         //기존에 남아있는 이미지와 새로 업로드할 이미지의 합이 10개를 넘지 않는지 확인
         if(jsonObject.getJSONArray("update").length() + jsonObject.getJSONArray("create").length() > MAX_IMAGE_COUNT)
@@ -137,28 +129,5 @@ public class ImageService {
         imageRepository.deleteAllByCategoryAndCategoryId(category, categoryid);
         s3Service.deleteFolder(category.toString(), categoryid.toString());
     }
-    
-    //권한 체크
-    private void checkAuthority(Long userId, Category category, UUID categoryid) {
-        //권한 체크
-        switch (category) {
-            case restaurant -> {
-                userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-                Restaurant restaurant = restaurantRepository.findById(categoryid).orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
-                if(!restaurant.getOwnerId().equals(userId)) throw new BusinessException(ErrorCode.NOT_OWNER);
-            }
-            case menu -> {
-                userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-                Menu menu = menuRepository.findById(categoryid).orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
-                Restaurant restaurant = restaurantRepository.findById(menu.getRestaurant().getId()).orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
-                if(!restaurant.getOwnerId().equals(userId)) throw new BusinessException(ErrorCode.NOT_OWNER);
-            }
-            case review -> {
-                userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-                Review review = reviewRepository.findById(categoryid).orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
-                if(!review.getUserId().equals(userId)) throw new BusinessException(ErrorCode.NOT_REVIEWER);
-            }
-            default -> {}
-        }
-    }
+
 }
