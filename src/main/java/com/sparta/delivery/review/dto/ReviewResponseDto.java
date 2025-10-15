@@ -5,7 +5,7 @@ import java.util.UUID;
 public record ReviewResponseDto(
         UUID id,
         UUID restaurantId,
-        UUID userId,
+        Long userId,
         double rating,
         String content
 ) {}

@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.util.UUID;
 
 @Entity
@@ -39,13 +40,13 @@ public class Review extends BaseEntity {
     private UUID orderId;
 
     @Column(name="user_id", nullable=false)
-    private UUID userId;
+    private Long userId;
 
     @Column(name="restaurant_id", nullable=false)
     private UUID restaurantId;
 
     @Builder
-    private Review(double rating, String content, UUID orderId, UUID userId, UUID restaurantId) {
+    private Review(double rating, String content, UUID orderId, Long userId, UUID restaurantId) {
         this.rating = rating;
         this.content = content;
         this.orderId = orderId;
