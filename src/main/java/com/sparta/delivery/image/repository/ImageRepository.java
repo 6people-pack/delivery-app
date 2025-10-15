@@ -16,4 +16,6 @@ public interface ImageRepository extends JpaRepository<Image, UUID> {
      List<Image> findAllByCategoryAndCategoryIdAndIndexBetween(Category category, UUID categoryId, int startIndex, int endIndex);
      List<Image> findAllByCategoryAndCategoryIdAndIndexAfter(Category category, UUID categoryId, int startIndex);
      void deleteAllByCategoryAndCategoryId(Category category, UUID categoryId);
+
+    Optional<Image> findByUrl(String url);
 }
