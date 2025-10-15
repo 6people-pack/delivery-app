@@ -1,0 +1,38 @@
+{
+  "category": "restaurant",
+  "categoryId": "745e330c-1dd1-464b-9d42-2818096eaea7",
+  "create" : [
+    {"index":3},
+    {"index":9},
+    {"index":8},
+    {"index":10},
+    {"index":11},
+    {"index":7}
+  ],
+  "delete" : [
+    {"url": "https://s3.ap-northeast-2.amazonaws.com/sixdelivery/restaurant/745e330c-1dd1-464b-9d42-2818096eaea7/e1d78275-5d51-41cd-b590-55050c212189.png"}
+  ],
+  "update" : [
+    {
+      "imageId": "5b353147-f884-4905-a392-a3c3f6005846",
+      "index": 1
+    },
+    {
+      "imageId": "817e667f-1b8b-41b4-baf1-c95437dcd9cf",
+      "index": 2
+    },
+    {
+      "imageId": "fc038843-5ac2-4613-acc2-357165620c8e",
+      "index": 4
+    },
+    {
+      "imageId": "68241f75-76cb-4d12-bed2-adc4203657ce",
+      "index": 5
+    },
+    {
+      "imageId": "e8221b61-2262-466d-994f-087de446c878",
+      "index": 6
+    }
+  ]
+}
+
