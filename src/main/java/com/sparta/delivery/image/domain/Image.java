@@ -1,5 +1,6 @@
 package com.sparta.delivery.image.domain;
 
+import com.sparta.delivery.global.category.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,13 +42,5 @@ public class Image {
 
     public void updateIndex(int newIndex) {
         this.index = newIndex;
-    }
-
-    public void increaseIndex() {
-        this.index ++;
-    }
-
-    public void decreaseIndex() {
-        this.index --;
     }
 }

@@ -22,10 +22,9 @@ public class ImageController {
     //이미지 다건 조회
     //해당 카테고리의 이미지가 없을시 기본 이미지 반환
     @GetMapping("/all/{category}")
-    public BaseResponse<ImageMultiResponseDto> getAllImage(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                           @PathVariable String category,
+    public BaseResponse<ImageMultiResponseDto> getAllImage(@PathVariable String category,
                                                            @RequestBody ImageMultiRequestDto requestDto) {
-        return BaseResponse.ok(imageService.getAllImage(userDetails.getUser().getId(),category, requestDto.getCategoryid()), BaseStatus.OK);
+        return BaseResponse.ok(imageService.getAllImage(category, requestDto.getCategoryid()), BaseStatus.OK);
     }
     //이미지 다건 수정
     @PutMapping("/all")

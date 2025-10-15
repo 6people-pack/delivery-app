@@ -1,9 +1,6 @@
 package com.sparta.delivery.ai.controller;
 
-import com.sparta.delivery.ai.dto.AiAllResponseDto;
-import com.sparta.delivery.ai.dto.AiRequestDto;
-import com.sparta.delivery.ai.dto.AiResponseDto;
-import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
+import com.sparta.delivery.ai.dto.*;
 import com.sparta.delivery.ai.service.AiApiService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
@@ -18,6 +15,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AiApiController {
     private final AiApiService aiApiService;
+
+    @PostMapping("/keywords")
+    public BaseResponse<AiSimpleResponseDto> askKeywordQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                                   @RequestBody @Valid AiKeywordsRequestDto requestDto) {
+        return BaseResponse.ok(aiApiService.GetAiWithKeywords(userDetails.getUser().getId(),requestDto), BaseStatus.CREATED);
+    }
 
     @PostMapping
     public BaseResponse<AiSimpleResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
