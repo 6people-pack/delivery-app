@@ -1,9 +1,6 @@
 package com.sparta.delivery.ai.controller;
 
-import com.sparta.delivery.ai.dto.AiAllResponseDto;
-import com.sparta.delivery.ai.dto.AiRequestDto;
-import com.sparta.delivery.ai.dto.AiResponseDto;
-import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
+import com.sparta.delivery.ai.dto.*;
 import com.sparta.delivery.ai.service.AiApiService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
@@ -19,11 +16,16 @@ import org.springframework.web.bind.annotation.*;
 public class AiApiController {
     private final AiApiService aiApiService;
 
-    @PostMapping
-    public BaseResponse<AiSimpleResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                          @RequestBody @Valid AiRequestDto requestDto) {
-        return BaseResponse.ok(aiApiService.getAnswerFromAi(userDetails.getUser().getId(),requestDto.getQuestion()), BaseStatus.CREATED);
+    @PostMapping("/keywords")
+    public BaseResponse<AiSimpleResponseDto> askKeywordQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                                   @RequestBody @Valid AiKeywordsRequestDto requestDto) {
+        return BaseResponse.ok(aiApiService.GetAiWithKeywords(userDetails.getUser().getId(),requestDto), BaseStatus.CREATED);
     }
+
+//    @PostMapping
+//    public BaseResponse<AiSimpleResponseDto> askQuestion (@RequestBody @Valid AiRequestDto requestDto) {
+//        return BaseResponse.ok(aiApiService.getAnswerFromAi(requestDto.getQuestion()), BaseStatus.CREATED);
+//    }
 
     @GetMapping
     public BaseResponse<AiAllResponseDto> getAllChats(@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -33,9 +35,9 @@ public class AiApiController {
         return BaseResponse.ok(aiApiService.getAllChats(userDetails.getUser().getId(),startday, endday,word), BaseStatus.OK);
     }
 
-    @GetMapping("/{ai_id}")
+    @GetMapping("/{aiId}")
     public BaseResponse<AiResponseDto> getChat(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                               @PathVariable("ai_id") String aiId) {
+                                               @PathVariable("aiId") String aiId) {
         return BaseResponse.ok(aiApiService.getChat(userDetails.getUser().getId(),aiId), BaseStatus.OK);
     }
 
