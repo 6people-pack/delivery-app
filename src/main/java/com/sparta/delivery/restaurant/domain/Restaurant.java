@@ -1,5 +1,7 @@
 package com.sparta.delivery.restaurant.domain;
 
+import com.sparta.delivery.global.exception.BusinessException;
+import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.global.unit.common.BaseEntity;
 import com.sparta.delivery.restaurant.dto.RestaurantRequestDto;
 import jakarta.persistence.*;
@@ -116,13 +118,18 @@ public class Restaurant extends BaseEntity {
     }
 
     public void deleteRating(Double rating) {
-        // Todo : 리뷰가 하나도 없는 경우 예외처리
+        if (this.reviewCount == 0) {
+            throw new BusinessException(ErrorCode.RATING_NOT_FOUND);
+        }
+
         totalRating -= rating;
         reviewCount--;
-        this.rating = (double) Math.round((totalRating / reviewCount) * 10) / 10.0;
-    }
 
-    public void editCategories(List<UUID> categories) {
-
+        if (reviewCount == 0) {
+            this.totalRating = 0.0;
+            this.rating = 0.0;
+        } else {
+            this.rating = Math.round((totalRating / reviewCount) * 10) / 10.0;
+        }
     }
 }
