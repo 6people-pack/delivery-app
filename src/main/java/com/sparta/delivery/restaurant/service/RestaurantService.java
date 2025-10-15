@@ -1,5 +1,6 @@
 package com.sparta.delivery.restaurant.service;
 
+import com.sparta.delivery.category.repository.CategoryRepository;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.restaurant.domain.RatingStatus;
@@ -31,6 +32,7 @@ public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final RestaurantCategoryRepository restaurantCategoryRepository;
+    private final CategoryRepository categoryRepository;
 
     // 식당 등록
     @Transactional
@@ -43,12 +45,8 @@ public class RestaurantService {
         // Todo : 이미지 저장
         Restaurant restaurant = RestaurantMapper.toRestaurant(user.getId(), requestDto);
         restaurantRepository.save(restaurant);
-
-        ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
-        for (UUID category : requestDto.categories()) {
-            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(restaurant, category));
-        }
-        restaurantCategoryRepository.saveAll(allCategories);
+        // 식당_카테고리 저장
+        saveRestaurantCategory(requestDto, restaurant);
     }
 
     // 식당 수정
@@ -68,12 +66,7 @@ public class RestaurantService {
 
         // 기존 식당_카테고리 삭제후 재생성
         restaurantCategoryRepository.deleteAllByRestaurant(findRestaurant);
-        ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
-
-        for (UUID category : requestDto.categories()) {
-            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(findRestaurant, category));
-        }
-        restaurantCategoryRepository.saveAll(allCategories);
+        saveRestaurantCategory(requestDto, findRestaurant);
     }
 
     // 식당 삭제
@@ -82,6 +75,7 @@ public class RestaurantService {
 //        validateUser(user);
         Restaurant findRestaurant = restaurantRepository.findByIdAndOwnerIdAndDeletedAtIsNull(restaurantId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+        // Todo : 연관된 이미지 삭제 로직 추가 필요
         findRestaurant.delete(user.getId());
     }
 
@@ -163,6 +157,15 @@ public class RestaurantService {
         if (!user.getRole().equals(Role.OWNER)) {
             throw new BusinessException(ErrorCode.ROLE_AUTHORIZATION_REQUIRED);
         }
+    }
+
+    private void saveRestaurantCategory(RestaurantRequestDto requestDto, Restaurant findRestaurant) {
+        ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
+        for (UUID category : requestDto.categories()) {
+            if (!categoryRepository.existsById(category)) throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+            allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(findRestaurant, category));
+        }
+        restaurantCategoryRepository.saveAll(allCategories);
     }
 
 }

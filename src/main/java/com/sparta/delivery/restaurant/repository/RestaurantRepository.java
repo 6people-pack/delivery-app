@@ -37,8 +37,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
             "r.is_open AS isOpen, " +
             "r.rating AS rating, " +
             "(6371 * ACOS(COS(RADIANS(:lat)) * COS(RADIANS(r.latitude)) * COS(RADIANS(r.longitude) - RADIANS(:lon)) + SIN(RADIANS(:lat)) * SIN(RADIANS(r.latitude)))) AS distance " +
-            "FROM restaurant r " +
-            "JOIN restaurant_category rc ON r.restaurant_id = rc.restaurant_id " +
+            "FROM p_restaurant r " +
+            "JOIN p_restaurant_category rc ON r.restaurant_id = rc.restaurant_id " +
             "WHERE r.deleted_at IS NULL " +
             // name, category 값이 null 인경우 true 처리되어 필터적용 X
             "AND (:name IS NULL OR r.name LIKE CONCAT('%', :name, '%')) " +
@@ -58,8 +58,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
             "r.is_open AS isOpen, " +
             "r.rating AS rating, " +
             "(6371 * ACOS(COS(RADIANS(:lat)) * COS(RADIANS(r.latitude)) * COS(RADIANS(r.longitude) - RADIANS(:lon)) + SIN(RADIANS(:lat)) * SIN(RADIANS(r.latitude)))) AS distance " +
-            "FROM restaurant r " +
-            "LEFT JOIN restaurant_category rc ON r.restaurant_id = rc.restaurant_id " +
+            "FROM p_restaurant r " +
+            "LEFT JOIN p_restaurant_category rc ON r.restaurant_id = rc.restaurant_id " +
             "WHERE r.deleted_at IS NULL " +
             // 3km 필터 적용 (1차)
             "AND r.latitude BETWEEN :minLat AND :maxLat " +
