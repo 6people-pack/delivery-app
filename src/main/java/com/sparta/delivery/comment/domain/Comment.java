@@ -34,10 +34,10 @@ public class Comment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Inquiry inquiry;
 
-    // 대댓글
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "parent_id")
-//    private Comment parent;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
 
     @Builder(access = AccessLevel.PRIVATE)
     private Comment(String content, User author, Review review, Inquiry inquiry, Comment parent) {
