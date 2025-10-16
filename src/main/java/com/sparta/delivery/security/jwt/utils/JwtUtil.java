@@ -1,8 +1,8 @@
-package com.sparta.delivery.security;
+package com.sparta.delivery.security.jwt.utils;
 
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
-import com.sparta.delivery.user.dto.RefreshTokenDto;
+import com.sparta.delivery.security.jwt.dto.RefreshTokenResponseDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -55,8 +55,8 @@ public class JwtUtil {
                         .compact();
     }
 
-    // 리프레시 토큰 생성
-    public RefreshTokenDto issueRefreshToken(String email) {
+    // 리프레시 토큰 생성, 만료 시간이 다르고 만료 시간을 같이 반환(온리쿠키에 추가하기 위해)
+    public RefreshTokenResponseDto issueRefreshToken(String email) {
         Date date = new Date();
         Date exp = new Date(date.getTime() + REFRESH_TOKEN_TIME);
 
@@ -67,7 +67,7 @@ public class JwtUtil {
                 .signWith(key, signatureAlgorithm)
                 .compact();
 
-        return new RefreshTokenDto(refreshToken, exp);
+        return new RefreshTokenResponseDto(refreshToken, exp);
     }
 
     // header 에서 JWT 엑세스 토큰 가져오기
@@ -87,7 +87,7 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token); //파싱하는 과정에서 유효성 검증에 실패하면 자동으로 예외가 발생함
         } catch (JwtException e) {
-            log.error("Invalid JWT signature, 유효하지 않는 JWT 서명입니다.");
+            log.error("jwtutil.validateToken: 유효하지 않는 JWT 서명입니다.");
             throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN); // 401
         }
     }
@@ -96,5 +96,6 @@ public class JwtUtil {
     public Claims getUserInfoFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
+
 
 }

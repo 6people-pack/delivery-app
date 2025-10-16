@@ -5,15 +5,16 @@ import com.sparta.delivery.menu.domain.MenuStatus;
 import com.sparta.delivery.menu.dto.MenuCreateRequestDto;
 import com.sparta.delivery.menu.dto.MenuResponseDto;
 import com.sparta.delivery.menu.dto.MenuSummaryDto;   // ★ 추가
-import com.sparta.delivery.restaurant.domain.Restaurant;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 public class MenuMapper {
 
-    public Menu toEntity(MenuCreateRequestDto req, Restaurant restaurantRef) {
+    public Menu toEntity(MenuCreateRequestDto req, UUID restaurantId) {
         return Menu.builder()
-                .restaurant(restaurantRef)
+                .restaurantId(restaurantId)
                 .name(req.name())
                 .description(req.description())
                 .price(req.price())
@@ -26,7 +27,7 @@ public class MenuMapper {
     public MenuResponseDto toResponse(Menu m) {
         return new MenuResponseDto(
                 m.getId(),
-                m.getRestaurant().getId(),
+                m.getRestaurantId(),
                 m.getName(),
                 m.getDescription(),
                 m.getPrice(),
