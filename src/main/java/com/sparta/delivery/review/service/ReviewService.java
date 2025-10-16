@@ -2,9 +2,10 @@ package com.sparta.delivery.review.service;
 
 import com.sparta.delivery.order.domain.OrderStatus;
 import com.sparta.delivery.order.repository.OrderRepository;
-import com.sparta.delivery.order.domain.Order;
 import com.sparta.delivery.order.repository.view.OrderView;
-import com.sparta.delivery.restaurant.repository.RestaurantRepository;
+import com.sparta.delivery.restaurant.domain.RatingStatus;
+import com.sparta.delivery.restaurant.dto.RatingRequestDto;
+import com.sparta.delivery.restaurant.service.RestaurantService;
 import com.sparta.delivery.review.domain.Review;
 import com.sparta.delivery.review.dto.ReviewCreateRequestDto;
 import com.sparta.delivery.review.dto.ReviewResponseDto;
@@ -27,33 +28,35 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final OrderRepository orderRepository;
+    private final RestaurantService restaurantService;
 
+    /** 리뷰 생성 */
     public ReviewResponseDto create(User user, ReviewCreateRequestDto req) {
-        //주문 요약 조회
+        // 주문 요약 조회
         OrderView order = orderRepository.findViewById(req.orderId())
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
-        //본인 주문 여부
+        // 본인 주문 여부
         if (!order.getUserId().equals(user.getId())) {
             throw new SecurityException("본인 주문에만 리뷰 작성 가능합니다.");
         }
 
-        //주문/배송 완료 상태 확인
-        OrderStatus st = order.getStatus();
-        if (!(st == OrderStatus.DELIVERED || st == OrderStatus.DELIVERED)) {
+        // 주문/배송 완료 상태 확인
+        if (order.getStatus() != OrderStatus.DELIVERED) {
             throw new IllegalStateException("주문/배송 완료 이후에만 리뷰 작성 가능합니다.");
         }
 
-        //가게 일치 검증
+        // 가게 일치 검증
         if (!order.getRestaurantId().equals(req.restaurantId())) {
             throw new IllegalStateException("주문 가게와 리뷰 대상 가게가 일치하지 않습니다.");
         }
 
-        //중복 리뷰 방지
+        // 중복 리뷰 방지
         if (reviewRepository.existsByOrderIdAndUserId(req.orderId(), user.getId())) {
             throw new IllegalStateException("해당 주문에 이미 리뷰가 존재합니다.");
         }
 
+        // 저장
         Review saved = reviewRepository.save(
                 Review.builder()
                         .restaurantId(req.restaurantId())
@@ -62,6 +65,12 @@ public class ReviewService {
                         .rating(req.rating())
                         .content(req.content())
                         .build()
+        );
+
+        // 식당 평점 반영
+        restaurantService.editRating(
+                saved.getRestaurantId(),
+                new RatingRequestDto(RatingStatus.UPDATE, saved.getRating())
         );
 
         return new ReviewResponseDto(
@@ -88,21 +97,43 @@ public class ReviewService {
                 .map(r -> new ReviewResponseDto(r.getId(), r.getRestaurantId(), r.getUserId(), r.getRating(), r.getContent()));
     }
 
+
+    /** 리뷰 수정 */
     @Transactional
     public ReviewResponseDto update(User user, UUID reviewId, ReviewUpdateRequestDto req) {
         var r = reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰가 없습니다."));
-        if (!r.getUserId().equals(user.getId())) throw new SecurityException("본인 리뷰만 수정할 수 있습니다.");
+        if (!r.getUserId().equals(user.getId()))
+            throw new SecurityException("본인 리뷰만 수정할 수 있습니다.");
+
+        double oldRating = r.getRating();
         r.update(req.rating(), req.content());
+        double newRating = r.getRating();
+
+        // 기존 평점 제거 후 새로운 평점 반영
+        restaurantService.editRating(r.getRestaurantId(),
+                new RatingRequestDto(RatingStatus.DELETE, oldRating));
+        restaurantService.editRating(r.getRestaurantId(),
+                new RatingRequestDto(RatingStatus.UPDATE, newRating));
+
         return new ReviewResponseDto(r.getId(), r.getRestaurantId(), r.getUserId(), r.getRating(), r.getContent());
     }
 
+    /** 리뷰 삭제 */
     @Transactional
     public void delete(User user, UUID reviewId) {
         var r = reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰가 없습니다."));
-        if (!r.getUserId().equals(user.getId())) throw new SecurityException("본인 리뷰만 삭제할 수 있습니다.");
+        if (!r.getUserId().equals(user.getId()))
+            throw new SecurityException("본인 리뷰만 삭제할 수 있습니다.");
 
+        double oldRating = r.getRating();
         r.delete(null);
+
+        // 리뷰 삭제 시 평점 차감
+        restaurantService.editRating(
+                r.getRestaurantId(),
+                new RatingRequestDto(RatingStatus.DELETE, oldRating)
+        );
     }
 }
