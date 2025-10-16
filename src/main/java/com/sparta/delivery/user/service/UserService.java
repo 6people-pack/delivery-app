@@ -3,15 +3,15 @@ package com.sparta.delivery.user.service;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.global.unit.utils.CookieUtils;
-import com.sparta.delivery.security.JwtUtil;
-import com.sparta.delivery.user.domain.RefreshToken;
+import com.sparta.delivery.security.jwt.dto.RefreshTokenResponseDto;
+import com.sparta.delivery.security.jwt.utils.JwtUtil;
 import com.sparta.delivery.user.domain.User;
-import com.sparta.delivery.user.dto.LoginRequestDto;
-import com.sparta.delivery.user.dto.RefreshTokenDto;
-import com.sparta.delivery.user.dto.SignUpRequestDto;
-import com.sparta.delivery.user.repository.RefreshTokenRepository;
+import com.sparta.delivery.user.dto.*;
 import com.sparta.delivery.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,85 +26,171 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
-
-    //암호화 후 db에 회원가입 정보 저장
+    // 회원 가입
     @Transactional
-    public void signup(SignUpRequestDto RequestDto) {
+    public void signup(@Valid SignUpRequestDto RequestDto) {
         if (userRepository.findByEmail(RequestDto.email()).isPresent()) { // 이메일 중복
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);  //409
         }
 
-//        // 확장성 생각하면 유저 엔티티 생성 추적이 힘들어질 가능성이 높아서, builder 말고 파라미터 많아도 정적 팩토리 메서드나 생성자로 하는게 나을 수 있다
-        User user = new User(
+        userRepository.save(User.createCustomer(
                 RequestDto.email(),
                 passwordEncoder.encode(RequestDto.password()),
                 RequestDto.nickname(),
                 RequestDto.phoneNumber()
-        );
-
-        userRepository.save(user);
+        ));
     }
-
 
     //로그인
     @Transactional
-    public void login(LoginRequestDto dto, HttpServletResponse response) {
+    public void login(@Valid LoginRequestDto dto, HttpServletResponse response) {
 
         //가입된 email과 password가 같은지 확인
-        Optional<User> findUser = userRepository.findByEmail(dto.email());
-
-        if (findUser.isEmpty()) {  //이메일이 존재하지 않다 반환 시 찾을 때까지 이메일 무한 입력 가능성이 있으니 404 반환
-            throw new BusinessException(ErrorCode.LOGIN_USER_NOT_FOUND); //404
-        }
-
-        User user = findUser.get();
+        User findUser = userRepository.findByEmail(dto.email()).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 입력된 비밀번호, 저장된 비밀번호 비교
-        if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
+        if (!passwordEncoder.matches(dto.password(), findUser.getPassword())) {
             throw new BusinessException(ErrorCode.LOGIN_USER_NOT_FOUND);  //404
         }
 
+        // Token 발급
+        String accessToken = jwtUtil.issueAccessToken(findUser.getEmail());
+        RefreshTokenResponseDto refreshTokenResponseDto = jwtUtil.issueRefreshToken(findUser.getEmail());
+        String refreshToken = refreshTokenResponseDto.token();
 
-        issueAndSetAccessToken(response, user.getEmail());
-        issueAndSetRefreshToken(response, user);
+        // 리프레시 토큰 db 저장
+        findUser.updateRefreshToken(refreshToken);
 
+        // Token 헤더에 저장
+        response.setHeader("Authorization", accessToken);
 
-    }
-
-    public void issueAndSetAccessToken(HttpServletResponse response, String email) {
-
-        String accessToken = jwtUtil.issueAccessToken(email);   // accessToken 발급
-        response.setHeader("Authorization", accessToken); // accessToken은 헤더에 저장
-    }
-
-    public void issueAndSetRefreshToken(HttpServletResponse response, User user) {
-
-        refreshTokenRepository.deleteByUser(user); // db에 리프레시 토큰 있으면 삭제
-
-        // 만료 시간도 받아오기 위해 Dto로 전달
-        RefreshTokenDto refreshTokenDto = jwtUtil.issueRefreshToken(user.getEmail());
-        String refreshToken = refreshTokenDto.token();
-        Date exp = refreshTokenDto.exp();
-
-        refreshTokenRepository.save(
-                RefreshToken.builder()
-                        .refreshToken(refreshToken)
-                        .user(user)
-                        .exp(exp)
-                        .build()
-        );
-
+        // 원래는 리프레시 토큰도 헤더에 전송해서 프론트에서 쿠키로 등록하지만 프로트가 없어서 백엔드에서 쿠키등록
+        // 리프레시 토큰을 쿠키에 넣기 위해 만료시간 계산
         Duration ttlTime = Duration.between(
                 Instant.now(),
-                exp.toInstant()
+                refreshTokenResponseDto.exp().toInstant()
         );
-
-        // refreshToken은 http only 쿠키 방식으로 클라이언트에게 줌, ttlTime만큼 시간이 경과하면 삭제됨 ->이러면 db나 토큰에 만료 시간 설정 없어도 되나
+        // refreshToken은 http only 쿠키 방식으로 저장, ttlTime만큼 시간이 경과하면 삭제
         CookieUtils.setRefreshTokenCookie(response, refreshToken, ttlTime);
+
     }
 
+    // 엑세스 + 리프레시 토큰 재발급 및 등록
+    @Transactional
+    public void refreshJwtToken(User user, HttpServletRequest request, HttpServletResponse response) {
+        User findUser = userRepository.findById(user.getId()).orElseThrow(
+                ()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        String cookieRefreshToken = CookieUtils.getRefreshTokenCookie(request); // 쿠키에서 리프레시 토큰 받아서
+        jwtUtil.validateToken(cookieRefreshToken);                              // 토큰이 유효한지 검증
+
+        if (!findUser.getRefreshToken().equals(cookieRefreshToken)) {          // db에 있는 토큰과 비교
+            throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+        }
+
+        // Token 발급
+        String newAccessToken = jwtUtil.issueAccessToken(findUser.getEmail());
+        RefreshTokenResponseDto refreshTokenResponseDto = jwtUtil.issueRefreshToken(findUser.getEmail());
+        String newRefreshToken = refreshTokenResponseDto.token();
+
+        // 리프레시 토큰 db 저장
+        findUser.updateRefreshToken(newRefreshToken);
+
+        // Token 헤더에 저장
+        response.setHeader("Authorization", newAccessToken);
+
+        // 원래는 리프레시 토큰도 헤더에 전송해서 프론트에서 쿠키로 등록하지만 프로트가 없어서 백엔드에서 쿠키등록
+        // 리프레시 토큰을 쿠키에 넣기 위해 만료시간 계산
+        Duration ttlTime = Duration.between(
+                Instant.now(),
+                refreshTokenResponseDto.exp().toInstant()
+        );
+        // refreshToken은 http only 쿠키 방식으로 저장, ttlTime만큼 시간이 경과하면 삭제
+        CookieUtils.setRefreshTokenCookie(response, newRefreshToken, ttlTime);
+
+    }
+
+    // 로그아웃
+    @Transactional
+    public void logout(HttpServletResponse response) {
+
+        // Response 헤더에서 토큰 제거
+        response.setHeader("Authorization", null);
+        response.setHeader("Refresh-Token", null);
+
+        // 쿠키에 있는 리프레시 토큰은 자동 로그인 기능 시 필요해서 상황에 따라 삭제하거나 말거나
+
+        // 엑세스 토큰은 무효화가 안됨 로그아웃 후 살아있는 몇분 동안 위험할 수도
+        // 블랙리스트방식이 있다는 것 같지만 시간 관계상 여유되면 구현
+
+    }
+
+    // 핸드폰 번호 변경 (바로 변경)
+    @Transactional
+    public void updatePhoneNumber(User user, @Valid UpdatePhoneNumberRequestDto dto) {
+        // 유저 최신화(컨트롤러에서 받아온 User는 영속성 컨텍스트의 보호를 받지 않음)
+        User findUser = userRepository.findById(user.getId()).orElseThrow(
+                ()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        findUser.updatePhoneNumber(dto.phoneNumber());
+        userRepository.save(findUser);
+    }
+
+    // 닉네임 변경 (중복 검사)
+    @Transactional
+    public void updateNickname(User user, @Valid UpdateNicknameRequestDto dto) {
+        // 유저 최신화
+        User findUser = userRepository.findById(user.getId()).orElseThrow(
+                ()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 닉네임 중복 검사
+        if (userRepository.existsByNickname(findUser.getNickname())) {
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+        }
+
+        findUser.updateNickname(dto.nickname());
+        userRepository.save(findUser);
+    }
+
+    // 현재 비밀번호 확인
+    @Transactional(readOnly = true)
+    public void verifyPassword(User user, @Valid VerifyPasswordRequestDto dto) {
+        // 유저 최신화
+        User findUser = userRepository.findById(user.getId()).orElseThrow(
+                ()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(dto.currentPassword(), findUser.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+    }
+
+    // 패스워드 변경 (재확인)
+    @Transactional
+    public void updatePassword(User user, @Valid UpdatePasswordRequestDto dto) {
+        User findUser = userRepository.findByEmail(user.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 새 비밀번호 재확인
+        if (!dto.confirmPassword().equals(dto.newPassword())) {
+            throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_NOT_MATCH);
+        }
+
+        findUser.updatePassword(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(findUser);
+    }
+
+    // 회원 탈퇴
+    @Transactional
+    public void withdraw(User user) {
+        // 유저 최신화
+        User findUser = userRepository.findByEmail(user.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        findUser.delete(user.getId());
+        userRepository.save(findUser);
+    }
 
 }
