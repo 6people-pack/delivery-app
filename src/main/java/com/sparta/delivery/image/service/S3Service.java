@@ -21,7 +21,6 @@ import java.util.List;
 public class S3Service {
 
     private final S3Client amazonS3Client;
-    private final S3Client s3Client;
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
@@ -41,6 +40,7 @@ public class S3Service {
                     .bucket(bucket)
                     .key(fileName)
                     .build());
+            log.info("File uploaded to S3: {}", fileName);
 
             return url.toString();
         }catch (IOException e) {
@@ -82,12 +82,12 @@ public class S3Service {
 
         List<ObjectIdentifier> objects = urls.stream()
                 .map(url -> ObjectIdentifier.builder()
-                        .key(url.substring(url.lastIndexOf(".com/") + 5))
+                        .key(url.substring(url.lastIndexOf(".com/") + 17))
                         .build()
                 )
                 .toList();
         try {
-            DeleteObjectsResponse res = s3Client.deleteObjects(
+            DeleteObjectsResponse res = amazonS3Client.deleteObjects(
                     DeleteObjectsRequest.builder()
                             .bucket(bucket)
                             .delete(Delete.builder().objects(objects).build())
@@ -96,7 +96,8 @@ public class S3Service {
 
             // 성공한 항목 목록 확인 가능
             List<DeletedObject> deleted = res.deleted();
-            System.out.println("Deleted " + deleted.size() + " objects from S3.");
+            log.info("Deleted {} objects from S3.", deleted.size());
+            log.info("delete errors: {}", res.errors());
         }catch (S3Exception e) {
             // 실패 시 여기로 들어옴
             throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
