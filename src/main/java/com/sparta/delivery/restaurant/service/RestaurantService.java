@@ -81,7 +81,7 @@ public class RestaurantService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
 
         // 연관된 이미지 삭제
-        imageService.deleteAllImage(ImageCategory.restaurant, findRestaurant.getId());
+        imageService.deleteImageFolder(ImageCategory.restaurant, findRestaurant.getId());
         findRestaurant.delete(user.getId());
     }
 

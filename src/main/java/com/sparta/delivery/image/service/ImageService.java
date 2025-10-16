@@ -62,7 +62,6 @@ public class ImageService {
     }
 
     //이미지 다건 수정
-    //todo : s3 업로드, 삭제 실패시 결과도 확인
     //todo : 메서드 분리하기
     @Transactional
     public ImageMultiResponseDto updateAllImage(Long userId, ImageUpdateRequestDto requestDto , List<MultipartFile> files) {
@@ -77,32 +76,37 @@ public class ImageService {
             throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
 
         //이미지 삭제
-        List<String> urls = requestDto.getDelete().stream().map(ImageDDto::getUrl).toList();
-        List<UUID> ids = urls.stream().map(url ->UUID.fromString(url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf(".")))).toList();
-        List<Image> dImages = imageRepository.findAllById(ids);
-
-        //받은 url개수와 찾은 이미지 개수가 다르면 이미지를 못찾은 것, 제대로 찾았다면 데이터 삭제
-        if(dImages.size() != ids.size()) throw new BusinessException(ErrorCode.IMAGE_NOT_FOUND);
-        imageRepository.deleteAll(dImages);
-
-        //커밋에 성공시 s3에서 이미지 삭제
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
-            @Override public void afterCommit() {
-                s3Service.deleteImages(urls);
-            }
-        });
-
+        deleteImages(requestDto.getDelete());
 
         //기존 이미지 인덱스 수정
-        List<ImageUDto> update = requestDto.getUpdate();
+        updateImages(requestDto.getUpdate());
+
+        //새로운 이미지 업로드
+        createImages(requestDto.getCreate(), files, imageCategory, categoryid);
+
+        //인덱스 맞는지 확인
+        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(imageCategory, categoryid);
+        for (int i = 0; i < images.size(); i++) {
+            if (images.get(i).getIndex() != i + 1) throw new BusinessException(ErrorCode.NOT_SEQUENTIAL_INDEX);
+        }
+        return new ImageMultiResponseDto(imageCategory.toString(), categoryid.toString(),
+                images.stream().map(image -> new ImageSimpleResponseDto(image.getUrl(), image.getIndex())).toList());
+    }
+
+    private void updateImages(List<ImageUDto> update) {
+        //수정할 이미지가 없으면 종료
+        if(update.isEmpty()) return;
         for (ImageUDto imageUDto : update) {
             Image image = imageRepository.findById(UUID.fromString(imageUDto.getImageId()))
                     .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
             image.updateIndex(imageUDto.getIndex());
         }
+    }
 
-        //새로운 이미지 업로드
-        List<ImageCDto> create = requestDto.getCreate();
+    private void createImages(List<ImageCDto> create, List<MultipartFile> files, ImageCategory imageCategory, UUID categoryid) {
+        //업로드할 이미지가 없으면 종료
+        if (create.isEmpty()) return;
+        
         List<Image> cImages = new ArrayList<>(create.size());
         List<String> cUrls = new ArrayList<>(create.size());
         //받은 인덱스 개수와 파일 개수가 다르면 오류
@@ -130,20 +134,31 @@ public class ImageService {
                 }
             }
         });
+    }
 
-        //인덱스 맞는지 확인
-        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(imageCategory, categoryid);
-        for (int i = 0; i < images.size(); i++) {
-            if (images.get(i).getIndex() != i + 1) throw new BusinessException(ErrorCode.NOT_SEQUENTIAL_INDEX);
-        }
-        return new ImageMultiResponseDto(imageCategory.toString(), categoryid.toString(),
-                images.stream().map(image -> new ImageSimpleResponseDto(image.getUrl(), image.getIndex())).toList());
+    private void deleteImages(List<ImageDDto> delete) {
+        //삭제할 이미지가 없으면 종료
+        if(delete.isEmpty()) return;
+        //삭제할 이미지 찾기
+        List<String> urls = delete.stream().map(ImageDDto::getUrl).toList();
+        List<UUID> ids = urls.stream().map(url ->UUID.fromString(url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf(".")))).toList();
+        List<Image> dImages = imageRepository.findAllById(ids);
+
+        //받은 url개수와 찾은 이미지 개수가 다르면 이미지를 못찾은 것, 제대로 찾았다면 데이터 삭제
+        if(dImages.size() != ids.size()) throw new BusinessException(ErrorCode.IMAGE_NOT_FOUND);
+        imageRepository.deleteAll(dImages);
+
+        //커밋에 성공시 s3에서 이미지 삭제
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            @Override public void afterCommit() {
+                s3Service.deleteImages(urls);  //여기서 오류 터지면 release 캐시를 만들거나, db의 상태를 저장해서 다시 되돌리는 스케줄러가 필요 -> 지금으로선 고난이도임
+            }
+        });
     }
 
     //이미지 카테고리 삭제
     @Transactional
-    public void deleteAllImage(ImageCategory imageCategory, UUID categoryId) {
-
+    public void deleteImageFolder(ImageCategory imageCategory, UUID categoryId) {
         //해당 카테고리에 이미지가 하나도 없을시 종료
         if(imageRepository.countByCategoryAndCategoryId(imageCategory, categoryId)==0)  return;
 
