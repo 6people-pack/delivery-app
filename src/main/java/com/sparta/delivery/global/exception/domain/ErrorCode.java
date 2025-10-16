@@ -33,7 +33,12 @@ public enum ErrorCode {
     // 404 Not Found
     LOGIN_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "로그인 정보와 일치하는 사용자가 존재하지 않습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자가 존재하지 않습니다."),
-    NOT_FIND_INQUIRY(HttpStatus.NOT_FOUND, "문의 정보가 존재하지 않습니다.");
+    NOT_FIND_INQUIRY(HttpStatus.NOT_FOUND, "문의 정보가 존재하지 않습니다."),
+
+    // 500 Server Error
+    AI_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI 응답 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+
+
 
     private final HttpStatus status;
     private final String message;

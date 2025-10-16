@@ -11,10 +11,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
+public interface InquiryRepository extends JpaRepository<Inquiry, UUID> {
 
 
-    @Query("select i from Inquiry i where i.id = :inquiryId and i.user.id = :userId")
+    @Query("select i from Inquiry i where i.id = :inquiryId and i.userId = :userId")
     Optional<Inquiry> findByIdAndUser(@Param("inquiryId") UUID inquiryId, @Param("userId") Long userId);
 
 

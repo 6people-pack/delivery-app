@@ -1,6 +1,14 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen3:4b
+          temperature: 0.2
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -35,3 +43,33 @@ discord:
   bot:
     token: ${DISCORD_BOT_TOKEN}
     channel: ${DISCORD_CHANNEL_ID}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ai:
+        sliding-window-type: TIME_BASED      # 시간 기준
+        sliding-window-size: 120             # 120초(2분) 동안의 통계
+        minimum-number-of-calls: 50          # 최소 표본 수
+        failure-rate-threshold: 50           # 실패율 50% 넘으면 OPEN
+        wait-duration-in-open-state: 30s     # 30초 동안 차단
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    ai:
+      max-attempts: 3                     # 1+재시도 2
+      wait-duration: 500ms
+      enable-exponential-backoff: true
+      exponential-backoff-multiplier: 2.0
+      max-wait-duration: 5s
+      retry-exceptions:
+        - java.io.IOException
+        - java.util.concurrent.TimeoutException
+        - org.springframework.web.reactive.function.client.WebClientResponseException
+
+  ratelimiter:
+    instances:
+      ai:
+        limit-for-period: 10                # (선택) 초당 10건
+        limit-refresh-period: 1s
+        timeout-duration: 0s

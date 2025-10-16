@@ -12,12 +12,12 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
-public class InquiryEventListener {
+public class InquiryAlamEventListener {
 
     private final DiscordService discordService;
 
     @Description("고객센터 문의가 접수 될 시 Discord 알람을 보낸다")
-    @Async
+    @Async("discordExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onInquiryAddEvent(InquiryCreateEvent event) {
         discordService.InquirySendMessageToDiscord(
@@ -25,9 +25,7 @@ public class InquiryEventListener {
             event.getTitle(),
             event.getContent()
         );
-
     }
-
 
 
 }

@@ -20,11 +20,7 @@ public class InquiryMessage implements DiscordEmbeddable {
     public String getTitle() {
         return "고객센터 문의 내용";
     }
-
-//    @Override
-//    public String getDescription() {
-//        return "문의 사항이 접수 되었습니다.";
-//    }
+    
 
     @Override
     public Map<String, String> getFields() {

@@ -16,7 +16,7 @@ public class InquiryMapper {
         return Inquiry.builder()
             .title(inquiryCreateRequestDto.title())
             .content(inquiryCreateRequestDto.content())
-            .user(user)
+            .user(user.getId())
             .build();
     }
 

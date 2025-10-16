@@ -5,11 +5,13 @@ import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.inquiry.dto.InquiryAllGetResponseDto;
 import com.sparta.delivery.inquiry.dto.InquiryCreateRequestDto;
 import com.sparta.delivery.inquiry.dto.InquiryOneGetResponseDto;
+import com.sparta.delivery.inquiry.mapper.InquiryMapper;
 import com.sparta.delivery.inquiry.service.InquiryService;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,6 +54,12 @@ public class InquiryController {
         public BaseResponse<InquiryOneGetResponseDto> getOneInquiry(@AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable UUID inquiryId) {
             return BaseResponse.ok(inquiryService.getOneInquiry(userDetails.getUser().getId(), inquiryId), BaseStatus.OK);
+        }
+
+        @ResponseStatus(HttpStatus.OK)
+        @PostMapping("/ai/{answer}")
+        public BaseResponse<String> aiRequest(@PathVariable String answer) {
+                return inquiryService.getAiAnswer(answer);
         }
 
 }

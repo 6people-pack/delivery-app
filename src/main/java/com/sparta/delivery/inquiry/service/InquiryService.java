@@ -3,6 +3,8 @@ package com.sparta.delivery.inquiry.service;
 
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
+import com.sparta.delivery.global.unit.common.BaseResponse;
+import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.dto.InquiryAllGetResponseDto;
 import com.sparta.delivery.inquiry.dto.InquiryCreateRequestDto;
@@ -14,18 +16,18 @@ import com.sparta.delivery.inquiry.repository.InquiryRepository;
 import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.repository.UserRepository;
-import com.sparta.delivery.user.service.UserService;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InquiryService {
@@ -36,6 +38,7 @@ public class InquiryService {
     //private final ImageQueryService imageQueryService;
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepository userRepository;
+    private final ChatClient chatClient;
 
 
     // 문의글 생성
@@ -44,7 +47,7 @@ public class InquiryService {
         User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         Inquiry inquiry = InquiryMapper.toInquiry(request, user);
         inquiryRepository.save(inquiry);
-        eventPublisher.publishEvent(new InquiryCreateEvent(inquiry));
+        eventPublisher.publishEvent(new InquiryCreateEvent(inquiry, user));
     }
 
 
@@ -78,11 +81,30 @@ public class InquiryService {
         Inquiry inquiry = inquiryRepository.findByIdAndUser(inquiryId, userId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FIND_INQUIRY));
 
         //관리자도 아니고 자신이 쓴 문의글이 아니면 조회 불가
-        if (!user.getRole().equals(Role.ADMIN) && !inquiry.getUser().getId().equals(user.getId())) {
+        if (!user.getRole().equals(Role.ADMIN) && !inquiry.getUserId().equals(user.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
 
         return InquiryMapper.fromInquiry(inquiry);
 
+    }
+
+    // 해당 위치에서 변경 예정
+
+    public BaseResponse<String> getAiAnswer(String message){
+        try {
+            String answer = chatClient
+                .prompt()
+                .user(message)
+                .call()
+                .content();
+
+            if (answer == null || answer.isBlank()) {
+                answer = "응답이 완성되질 않음";
+            }
+            return BaseResponse.ok(answer, BaseStatus.OK);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.AI_SERVICE_UNAVAILABLE);
+        }
     }
 }

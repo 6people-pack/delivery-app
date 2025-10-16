@@ -10,8 +10,8 @@ public class InquiryCreateEvent {
     private final String title;
     private final String Content;
 
-    public InquiryCreateEvent(Inquiry inquiry) {
-        this.user = inquiry.getUser();
+    public InquiryCreateEvent(Inquiry inquiry, User user) {
+        this.user = user;
         this.title = inquiry.getTitle();
         Content = inquiry.getContent();
     }
