@@ -22,7 +22,6 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ImageService {
     private final ImageRepository imageRepository;
     private final S3Service s3Service;
@@ -32,7 +31,6 @@ public class ImageService {
 
 
     //이미지 최초 업로드(다수 가능)
-    @Transactional
     public void uploadImage(ImageCategory imageCategory, UUID categoryId, List<MultipartFile> files) {
         //이미지는 한 폴더당 10개 제한
         if(files.size() > MAX_IMAGE_COUNT) throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
@@ -48,6 +46,7 @@ public class ImageService {
     }
 
     //이미지 다건 조회 - 권한 체크 x
+    @Transactional(readOnly = true)
     public ImageMultiResponseDto getAllImage( String category, String categoryid) {
         //해당 카테고리의 객체가 있는지 확인
         List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(ImageCategory.valueOf(category), UUID.fromString(categoryid));
@@ -62,7 +61,6 @@ public class ImageService {
     }
 
     //이미지 다건 수정
-    //todo : 메서드 분리하기
     @Transactional
     public ImageMultiResponseDto updateAllImage(Long userId, ImageUpdateRequestDto requestDto , List<MultipartFile> files) {
         ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
@@ -157,7 +155,6 @@ public class ImageService {
     }
 
     //이미지 카테고리 삭제
-    @Transactional
     public void deleteImageFolder(ImageCategory imageCategory, UUID categoryId) {
         //해당 카테고리에 이미지가 하나도 없을시 종료
         if(imageRepository.countByCategoryAndCategoryId(imageCategory, categoryId)==0)  return;
