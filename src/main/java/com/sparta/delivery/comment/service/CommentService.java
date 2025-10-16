@@ -28,6 +28,7 @@ public class CommentService {
     private final UserRepository userRepository;
 
     /** 리뷰 댓글 생성 */
+    @Transactional
     public CommentResponseDto createForReview(Long loginUserId, UUID reviewId, CommentCreateRequestDto req) {
         User user = userRepository.getReferenceById(loginUserId);
         Review review = reviewRepository.findById(reviewId)
@@ -43,6 +44,7 @@ public class CommentService {
     }
 
     /** 문의 댓글 생성 */
+    @Transactional
     public CommentResponseDto createForInquiry(Long loginUserId, UUID inquiryId, CommentCreateRequestDto req) {
         User user = userRepository.getReferenceById(loginUserId);
         Inquiry inquiry = inquiryRepository.findById(inquiryId)
