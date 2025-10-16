@@ -55,7 +55,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             }
 
         }
-        if (!StringUtils.hasText(accessToken)) { log.error("토큰이 없는 요청");}
 
         // 토큰이 없으면 바로 다음 필터(=인증 절차 건너뛰기)
         filterChain.doFilter(req, res);

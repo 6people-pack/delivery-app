@@ -19,6 +19,8 @@ import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,6 +78,7 @@ public class OrderService {
                     cartItem.getOption(),
                     menu.getId()
             ));
+
         }
 
         // 배달비
@@ -111,13 +114,13 @@ public class OrderService {
 
     // 주문 조회
     @Transactional(readOnly = true)
-    public List<GetOrderResponseDto> getOrders(User user) {
+    public Page<GetOrderResponseDto> getOrders(User user, Pageable pageable) {
 
         // 사용자 ID로 DB에서 주문 목록 가져오기
-        List<Order> orders = orderRepository.findByUserId(user.getId());
+        Page<Order> orders = orderRepository.findByUserId(user.getId(), pageable);
 
         // 주문 하나씩 DTO로 변환
-        List<GetOrderResponseDto> responseDtos = orders.stream().map(order -> {
+        Page<GetOrderResponseDto> responseDtos = orders.map(order -> {
 
             // 주문에 포함된 상품들을 DTO로 변환
             List<GetOrderItemResponseDto> orderItemDtos = order.getOrderItems().stream().map(orderItem ->
@@ -137,7 +140,7 @@ public class OrderService {
                     orderItemDtos              // 변환된 주문 상품 리스트
             );
 
-        }).toList(); // 모든 주문 DTO를 리스트로 변환
+        }); // 모든 주문 DTO를 리스트로 변환
 
         return responseDtos;
     }
@@ -162,7 +165,6 @@ public class OrderService {
                         item.getOption()
                 )).toList();
 
-
         return new GetOrderDetailResponseDto(
                 order.getOrderNumber(),
                 order.getOrderStatus(),
@@ -181,11 +183,10 @@ public class OrderService {
                 order.getCancelMessage(),
                 orderItemDetailDtos
         );
-
     }
 
     // 가게 주문 현황 조회(점주)
-    public List<GetOrderDetailResponseDto> getOrdersOwner(User user, UUID restaurantId) {
+    public Page<GetOrderDetailResponseDto> getOrdersOwner(User user, UUID restaurantId, Pageable pageable) {
         Restaurant findRestaurant = restaurantRepository.findById(restaurantId).orElseThrow(
                 () -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
 
@@ -195,10 +196,9 @@ public class OrderService {
         }
 
         // 해당 식당의 주문들 조회
-        List<Order> orders = orderRepository.findByRestaurantId(restaurantId);
+        Page<Order> orders = orderRepository.findByRestaurantId(restaurantId, pageable);
 
-        List<GetOrderDetailResponseDto> responseDtos = orders.stream().map(order -> {
-
+        Page<GetOrderDetailResponseDto> responseDtos = orders.map(order -> {
             List<GetOrderItemDetailResponseDto> orderItemDetailDtos = order.getOrderItems().stream().map(orderItem ->
                     new GetOrderItemDetailResponseDto(
                             orderItem.getMenuName(),
@@ -227,7 +227,7 @@ public class OrderService {
                     order.getCancelMessage(),
                     orderItemDetailDtos
             );
-        }).toList();
+        });
 
         return responseDtos;
 
@@ -273,7 +273,10 @@ public class OrderService {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
 
-        if (order.getOrderStatus() == OrderStatus.REQUESTED) {
+        if (order.getOrderStatus() == OrderStatus.DELIVERED) {
+            throw new BusinessException(ErrorCode.OWNER_ORDER_CANNOT_CANCEL);
+        }
+        else if (order.getOrderStatus() == OrderStatus.REQUESTED) {
             order.changeStatusAccepted();
         }
         else if (order.getOrderStatus() == OrderStatus.ACCEPTED) {

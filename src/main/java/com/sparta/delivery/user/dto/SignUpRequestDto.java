@@ -1,5 +1,6 @@
 package com.sparta.delivery.user.dto;
 
+import com.sparta.delivery.user.domain.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
@@ -18,7 +19,9 @@ public record SignUpRequestDto(
     String nickname,
 
     @NotBlank(message = "전화번호는 필수 입력값입니다.")
-    String phoneNumber
+    String phoneNumber,
+
+    Role role
 
 ) {}
 

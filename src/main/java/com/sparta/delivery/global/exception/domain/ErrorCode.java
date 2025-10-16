@@ -28,6 +28,7 @@ public enum ErrorCode {
     DIFFERENT_RESTAURANT(HttpStatus.BAD_REQUEST, "장바구니에 다른 음식점 메뉴가 존재합니다."),
     INVALID_ORDER_ACCESS(HttpStatus.BAD_REQUEST, "사용자와 주문의 정보가 일치하지 않습니다."),
     ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "조리가 시작된 주문은 취소할 수 없습니다."),
+    OWNER_ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "완료된 주문은 취소할 수 없습니다."),
 
     // 401
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "인증이 필요한 요청입니다. 로그인 해주세요."),

@@ -8,7 +8,6 @@ import com.sparta.delivery.security.jwt.utils.JwtUtil;
 import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.dto.*;
 import com.sparta.delivery.user.repository.UserRepository;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -30,16 +29,17 @@ public class UserService {
 
     // 회원 가입
     @Transactional
-    public void signup(@Valid SignUpRequestDto RequestDto) {
-        if (userRepository.findByEmail(RequestDto.email()).isPresent()) { // 이메일 중복
+    public void signup(@Valid SignUpRequestDto requestDto) {
+        if (userRepository.findByEmail(requestDto.email()).isPresent()) { // 이메일 중복
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);  //409
         }
 
         userRepository.save(User.createCustomer(
-                RequestDto.email(),
-                passwordEncoder.encode(RequestDto.password()),
-                RequestDto.nickname(),
-                RequestDto.phoneNumber()
+                requestDto.email(),
+                passwordEncoder.encode(requestDto.password()),
+                requestDto.nickname(),
+                requestDto.phoneNumber(),
+                requestDto.role()
         ));
     }
 

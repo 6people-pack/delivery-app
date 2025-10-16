@@ -27,7 +27,7 @@ public class User extends BaseEntity {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.CUSTOMER;
 
     @Column(nullable = false)
     private String nickname;
@@ -39,13 +39,13 @@ public class User extends BaseEntity {
     private String refreshToken;
 
     // 고객 회원 생성
-    public static User createCustomer(String email, String password, String nickname, String phoneNumber) {
+    public static User createCustomer(String email, String password, String nickname, String phoneNumber, Role role) {
         User user = new User();
         user.email = email;
         user.password = password;
         user.nickname = nickname;
         user.phoneNumber = phoneNumber;
-        user.role = Role.CUSTOMER; // 역할 초기화
+        user.role = role;
         return user;
     }
 

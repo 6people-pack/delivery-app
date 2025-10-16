@@ -50,7 +50,8 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests((authorizeHttpRequests) ->
                 authorizeHttpRequests
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() // resources 접근 허용 설정
-                        .requestMatchers("/api/user/signup", "/api/user/login","/toss.html","/api/payments/confirm", "/api/payments/fail").permitAll() // 회원가입, 로그인 접근 허용
+                        .requestMatchers("/api/user/signup", "/api/user/login","/api/payments/confirm", "/api/payments/fail").permitAll() // 회원가입, 로그인 접근 허용
+                        .requestMatchers("/login.html", "/toss.html").permitAll() // 토스페이 테스트용
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
 
         );
