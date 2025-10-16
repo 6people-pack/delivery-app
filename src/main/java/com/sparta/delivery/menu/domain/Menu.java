@@ -22,9 +22,8 @@ public class Menu extends BaseEntity{
     @Column(name = "menu_id", columnDefinition = "uuid")
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id", nullable = false)
-    private Restaurant restaurant;
+    @Column(name = "restaurant_id", nullable = false)
+    private UUID restaurantId;
 
     @Column(nullable = false, length = 30)
     private String name;
@@ -38,7 +37,7 @@ public class Menu extends BaseEntity{
     @Column(nullable = false, columnDefinition = "int default 0")
     private int discountPrice;
 
-    @Column(name = "\"option\"")
+    @Column(name = "option")
     private String option;
 
     @Enumerated(EnumType.STRING)
@@ -74,7 +73,7 @@ public class Menu extends BaseEntity{
         if (status != null) this.status = status;
     }
 
-    public void setRestaurant(Restaurant restaurant) {
-        this.restaurant = restaurant;
+    public void setRestaurant(UUID restaurantId) {
+        this.restaurantId = restaurantId;
     }
 }

@@ -34,7 +34,7 @@ public class CategoryCheck {
             case menu -> {
                 userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
                 Menu menu = menuRepository.findById(categoryid).orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
-                Restaurant restaurant = restaurantRepository.findById(menu.getRestaurant().getId()).orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+                Restaurant restaurant = restaurantRepository.findById(menu.getRestaurantId()).orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
                 if(!restaurant.getOwnerId().equals(userId)) throw new BusinessException(ErrorCode.NOT_OWNER);
             }
             case review -> {
