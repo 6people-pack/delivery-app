@@ -3,6 +3,7 @@ package com.sparta.delivery.ai.controller;
 import com.sparta.delivery.ai.dto.*;
 import com.sparta.delivery.ai.service.AiApiService;
 import com.sparta.delivery.ai.service.AiPromptService;
+import com.sparta.delivery.ai.service.AiService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AiApiController {
     private final AiApiService aiApiService;
+    private final AiService aiService;
     private final AiPromptService aiPromptService;
 
     //ai요청 내용을 키워드로 받는 api, 원래는 front 영역
@@ -38,14 +40,14 @@ public class AiApiController {
                                                       @RequestParam(required = false) String startday,
                                                       @RequestParam(required = false) String endday,
                                                       @RequestParam(required = false) String word) {
-        return BaseResponse.ok(aiApiService.getAllChats(userDetails.getUser().getId(),startday, endday,word), BaseStatus.OK);
+        return BaseResponse.ok(aiService.getAllChats(userDetails.getUser().getId(),startday, endday,word), BaseStatus.OK);
     }
 
     //ai가 답변한 내용 단건 조회
     @GetMapping("/{aiId}")
     public BaseResponse<AiResponseDto> getChat(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                @PathVariable("aiId") String aiId) {
-        return BaseResponse.ok(aiApiService.getChat(userDetails.getUser().getId(),aiId), BaseStatus.OK);
+        return BaseResponse.ok(aiService.getChat(userDetails.getUser().getId(),aiId), BaseStatus.OK);
     }
 
 }

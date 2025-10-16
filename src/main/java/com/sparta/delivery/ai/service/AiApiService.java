@@ -1,52 +1,33 @@
 package com.sparta.delivery.ai.service;
 
-import com.querydsl.core.BooleanBuilder;
-import com.sparta.delivery.ai.domain.Ai;
-import com.sparta.delivery.ai.domain.QAi;
-import com.sparta.delivery.ai.dto.AiAllResponseDto;
-import com.sparta.delivery.ai.dto.AiResponseDto;
 import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
-import com.sparta.delivery.ai.repository.AiRepository;
-import com.sparta.delivery.global.exception.BusinessException;
-import com.sparta.delivery.global.exception.domain.ErrorCode;
-import com.sparta.delivery.user.domain.Role;
-import com.sparta.delivery.user.domain.User;
-import com.sparta.delivery.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
 
 
 @Slf4j
 @Service
+
 public class AiApiService {
 
     private final RestTemplate restTemplate;
-    private final AiRepository aiRepository;
-    private final UserRepository userRepository;
+    private final AiService aiService;
 
-    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository) {
+    public AiApiService(RestTemplateBuilder builder, AiService aiService) {
         this.restTemplate = builder.build();
-        this.aiRepository = aiRepository;
-        this.userRepository = userRepository;
+        this.aiService = aiService;
     }
 
-    @Transactional      //클래스에 @Transactional(readonly)를 설정하는건 클래스가 읽기 전용일때 이고, 원래는 각각 하는게 맞음
+    //todo : api key 숨기기
+    //todo : 응답 안받았을때 대응 필요
     public AiSimpleResponseDto getAnswerFromAi(String question) {
         //요청 url 만들기
         URI uri = UriComponentsBuilder
@@ -68,53 +49,8 @@ public class AiApiService {
         String answer = fromJSONtoAnswer(responseEntity.getBody());
         log.info("AI API Answer : " + answer);
 
-        Ai ai = new Ai(question, answer);
-        aiRepository.save(ai);
+        aiService.saveAi(question, answer);
         return new AiSimpleResponseDto(answer);
-    }
-
-
-    // 모든 질문과 답변 조회
-    @Transactional(readOnly = true)
-    public AiAllResponseDto getAllChats(Long userId, String startday, String endday, String word) {
-        //권한 체크
-        User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
-
-        //검색 조건 빌더
-        BooleanBuilder builder  = new BooleanBuilder();
-        QAi ai = QAi.ai;
-
-        if(StringUtils.hasText(startday)) {
-            LocalDateTime sDay = LocalDateTime.of(LocalDate.parse(startday), LocalTime.of(0,0,0));
-            builder.and(ai.createdAt.goe(sDay));
-        }
-
-        if(StringUtils.hasText(endday)) {
-            LocalDateTime eDay = LocalDateTime.of(LocalDate.parse(endday), LocalTime.of(23,59,59));
-            builder.and(ai.createdAt.loe(eDay));
-        }
-
-        if(StringUtils.hasText(word)) {
-            builder.and(ai.answer.contains(word));
-        }
-
-        List<Ai> aiList = (List<Ai>) aiRepository.findAll(builder, Sort.by(Sort.Order.desc("createdAt")));
-
-        List<AiResponseDto> aiResponseDtoList = aiList.stream()
-                .map(AiResponseDto::new)
-                .toList();
-        return new AiAllResponseDto(aiResponseDtoList);
-    }
-
-    @Transactional(readOnly = true)
-    public AiResponseDto getChat(Long userId, String aiId) {
-        //권한 체크
-        User user = userRepository.findById(userId).orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if(user.getRole() != Role.ADMIN) throw new BusinessException(ErrorCode.NOT_ADMIN);
-
-        Ai ai = aiRepository.findById(UUID.fromString(aiId)).orElseThrow(()-> new BusinessException(ErrorCode.AI_NOT_FOUND));
-        return new AiResponseDto(ai);
     }
 
     // 질문을 json 형태로 변환
