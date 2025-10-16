@@ -22,7 +22,6 @@ public enum ErrorCode {
     NO_USE_CATEGORY(HttpStatus.BAD_REQUEST, "해당 카테고리는 지원하지 않는 컨텐츠입니다."),
 
     //tosspay
-        //tosspay
     ZERO_AMOUNT_PAYMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "0원 결제는 허용되지 않습니다."),
     INVALID_MENU_STATUS(HttpStatus.BAD_REQUEST, "판매 중인 메뉴가 아닙니다."),
     DIFFERENT_RESTAURANT(HttpStatus.BAD_REQUEST, "장바구니에 다른 음식점 메뉴가 존재합니다."),
@@ -43,7 +42,6 @@ public enum ErrorCode {
 
     //500
     //image
-        //image
     FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"파일 업로드에 실패했습니다."),
     FILE_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다."),
 

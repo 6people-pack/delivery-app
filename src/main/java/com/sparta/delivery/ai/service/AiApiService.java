@@ -3,10 +3,10 @@ package com.sparta.delivery.ai.service;
 import com.querydsl.core.BooleanBuilder;
 import com.sparta.delivery.ai.domain.Ai;
 import com.sparta.delivery.ai.domain.QAi;
-import com.sparta.delivery.ai.dto.*;
+import com.sparta.delivery.ai.dto.AiAllResponseDto;
+import com.sparta.delivery.ai.dto.AiResponseDto;
+import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
 import com.sparta.delivery.ai.repository.AiRepository;
-import com.sparta.delivery.global.category.CategoryCheck;
-import com.sparta.delivery.global.category.ImageCategory;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.user.domain.Role;
@@ -34,45 +34,19 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-
 public class AiApiService {
 
     private final RestTemplate restTemplate;
     private final AiRepository aiRepository;
     private final UserRepository userRepository;
-    private final CategoryCheck categoryCheck;
 
-    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository, CategoryCheck categoryCheck) {
+    public AiApiService(RestTemplateBuilder builder, AiRepository aiRepository, UserRepository userRepository) {
         this.restTemplate = builder.build();
         this.aiRepository = aiRepository;
         this.userRepository = userRepository;
-        this.categoryCheck = categoryCheck;
-    }
-    public AiSimpleResponseDto GetAiWithKeywords(Long userId, AiKeywordsRequestDto requestDto) {
-        ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
-        UUID categoryId = UUID.fromString(requestDto.getCategoryId());
-        categoryCheck.checkAuthority(userId, imageCategory, categoryId);
-        if(imageCategory.equals(ImageCategory.restaurant)) {
-            RestaurantKeywords keywords = (RestaurantKeywords) requestDto.getKeywords();
-            String question = "나는 음식점 사장이야. 내 음식점의 이름은 " + keywords.name() + " 이고, " +
-                    "내 음식점의 대표 메뉴는 " + keywords.mainDish() + " 야. " +
-                    "내 음식점의 장점은 " + keywords.advantage() + " 이지. " +
-                    keywords.highlight() + "한다는 점을 중점으로 이 음식점을 홍보하기 위한 한줄 설명 문구를 만들어줘";
-            return getAnswerFromAi(question);
-        } else if (ImageCategory.valueOf(requestDto.getCategory()).equals(ImageCategory.menu)) {
-            MenuKeywords keywords = (MenuKeywords) requestDto.getKeywords();
-            String question = "나는 음식점 사장이야. 이 메뉴의 이름은 " + keywords.name() + " 이고,  " +
-                    "음식 종류는 " + keywords.category() + " 이고. " +
-                    "주재료는 " + keywords.mainIngredient() + " 이야, " +
-                    keywords.highlight() + "한다는 점을 중점으로 이 음식점을 홍보하기 위한 한줄 설명 문구를 만들어줘";
-            return getAnswerFromAi(question);
-        } else {
-            throw new BusinessException(ErrorCode.NO_USE_CATEGORY);
-        }
     }
 
-
-    @Transactional
+    @Transactional      //클래스에 @Transactional(readonly)를 설정하는건 클래스가 읽기 전용일때 이고, 원래는 각각 하는게 맞음
     public AiSimpleResponseDto getAnswerFromAi(String question) {
         //요청 url 만들기
         URI uri = UriComponentsBuilder
