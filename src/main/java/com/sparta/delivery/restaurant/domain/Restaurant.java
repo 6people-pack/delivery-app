@@ -111,25 +111,38 @@ public class Restaurant extends BaseEntity {
         this.closeTime = requestDto.closeTime();
     }
 
-    public void updateRating(double rating) {
-        totalRating += rating;
-        reviewCount++;
-        this.rating = (double) Math.round((totalRating / reviewCount) * 10) / 10.0;
+    public void addRating(double rating) {
+        validateRange(rating);
+        this.reviewCount += 1;
+        this.totalRating += rating;
+        recalcAvg();
     }
 
-    public void deleteRating(Double rating) {
+    public void removeRating(double rating) {
+        validateRange(rating);
         if (this.reviewCount == 0) {
             throw new BusinessException(ErrorCode.RATING_NOT_FOUND);
         }
+        this.reviewCount = Math.max(0, this.reviewCount - 1);
+        this.totalRating = Math.max(0.0, this.totalRating - rating);
+        recalcAvg();
+    }
 
-        totalRating -= rating;
-        reviewCount--;
-
-        if (reviewCount == 0) {
+    private void recalcAvg() {
+        if (this.reviewCount == 0) {
             this.totalRating = 0.0;
             this.rating = 0.0;
-        } else {
-            this.rating = Math.round((totalRating / reviewCount) * 10) / 10.0;
+            return;
+        }
+
+        this.rating = new java.math.BigDecimal(this.totalRating)
+                .divide(new java.math.BigDecimal(this.reviewCount), 1, java.math.RoundingMode.HALF_UP)
+                .doubleValue();
+    }
+
+    private void validateRange(double rating) {
+        if (rating < 1.0 || rating > 5.0) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
         }
     }
 }
