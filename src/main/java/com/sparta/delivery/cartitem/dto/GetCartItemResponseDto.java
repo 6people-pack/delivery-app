@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-public record GetCartItemDto(
+public record GetCartItemResponseDto(
 
         @NotNull(message = "메뉴 데이터가 존재하지 않습니다.")
         UUID menuId,

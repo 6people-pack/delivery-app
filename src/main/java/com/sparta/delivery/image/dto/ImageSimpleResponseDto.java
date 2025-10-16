@@ -1,16 +1,14 @@
 package com.sparta.delivery.image.dto;
 
-import com.sparta.delivery.image.domain.Image;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 public class ImageSimpleResponseDto {
-    private String imageId;
+    private String imageUrl;
     private int index;
 
-    public ImageSimpleResponseDto(String imageId, int index) {
-        this.imageId = imageId;
+    public ImageSimpleResponseDto(String imageUrl, int index) {
+        this.imageUrl = imageUrl;
         this.index = index;
     }
 }

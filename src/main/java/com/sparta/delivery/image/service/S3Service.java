@@ -40,22 +40,11 @@ public class S3Service {
                     .bucket(bucket)
                     .key(fileName)
                     .build());
+            log.info("File uploaded to S3: {}", fileName);
 
             return url.toString();
         }catch (IOException e) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
-        }
-    }
-
-    public void deleteImage(String imageUrl) {
-        try {
-            String fileName = imageUrl.substring(imageUrl.lastIndexOf(".com/") + 5);
-            amazonS3Client.deleteObject(DeleteObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(fileName)
-                    .build());
-        }catch (Exception e) {
-            throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
         }
     }
 
@@ -87,4 +76,32 @@ public class S3Service {
 
         log.info("Deleted {} objects under prefix '{}'", toDelete.size(), prefix);
     }
+
+    public void deleteImages(List<String> urls) {
+        if (urls.isEmpty()) return;
+
+        List<ObjectIdentifier> objects = urls.stream()
+                .map(url -> ObjectIdentifier.builder()
+                        .key(url.substring(url.lastIndexOf(".com/") + 17))
+                        .build()
+                )
+                .toList();
+        try {
+            DeleteObjectsResponse res = amazonS3Client.deleteObjects(
+                    DeleteObjectsRequest.builder()
+                            .bucket(bucket)
+                            .delete(Delete.builder().objects(objects).build())
+                            .build()
+            );
+
+            // 성공한 항목 목록 확인 가능
+            List<DeletedObject> deleted = res.deleted();
+            log.info("Deleted {} objects from S3.", deleted.size());
+            log.info("delete errors: {}", res.errors());
+        }catch (S3Exception e) {
+            // 실패 시 여기로 들어옴
+            throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
+        }
+    }
+
 }
