@@ -30,7 +30,7 @@ public class ImageController {
     @PutMapping("/all")
     public BaseResponse<ImageMultiResponseDto> updateAllImage(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                               @RequestPart("files") List<MultipartFile> files,
-                                                              @RequestPart("request") String request) {
+                                                              @RequestPart("request") ImageUpdateRequestDto request) {
         return BaseResponse.ok(imageService.updateAllImage(userDetails.getUser().getId(), request, files), BaseStatus.OK);
     }
 }

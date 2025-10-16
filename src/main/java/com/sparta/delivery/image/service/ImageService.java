@@ -5,15 +5,14 @@ import com.sparta.delivery.global.category.ImageCategory;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.image.domain.Image;
-import com.sparta.delivery.image.dto.ImageMultiResponseDto;
-import com.sparta.delivery.image.dto.ImageSimpleResponseDto;
+import com.sparta.delivery.image.dto.*;
 import com.sparta.delivery.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -63,50 +62,75 @@ public class ImageService {
     }
 
     //이미지 다건 수정
-    //todo : 오류 발생시 s3와 db 불일치 문제 해결
-    //todo : requestDto를 json형태인지 requestDto로 하는지 고민
+    //todo : s3 업로드, 삭제 실패시 결과도 확인
+    //todo : 메서드 분리하기
+    //todo : menu에서 restaurant를 가져오는 방법 바뀐 것 확인하기
     @Transactional
-    public ImageMultiResponseDto updateAllImage(Long userId,String requestDto , List<MultipartFile> files) {
-        JSONObject jsonObject = new JSONObject(requestDto);
-        ImageCategory imageCategory = ImageCategory.valueOf(jsonObject.getString("category"));
-        UUID categoryid = UUID.fromString(jsonObject.getString("categoryId"));
+    public ImageMultiResponseDto updateAllImage(Long userId, ImageUpdateRequestDto requestDto , List<MultipartFile> files) {
+        ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
+        UUID categoryid = UUID.fromString(requestDto.getCategoryId());
 
         //권한 체크
         categoryCheck.checkAuthority(userId, imageCategory, categoryid);
 
         //기존에 남아있는 이미지와 새로 업로드할 이미지의 합이 10개를 넘지 않는지 확인
-        if(jsonObject.getJSONArray("update").length() + jsonObject.getJSONArray("create").length() > MAX_IMAGE_COUNT)
+        if(requestDto.getUpdate().size() + requestDto.getCreate().size() > MAX_IMAGE_COUNT)
             throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
 
         //이미지 삭제
-        JSONArray delete = jsonObject.getJSONArray("delete");
-        for(int i = 0; i < delete.length(); i++) {
-            String url = delete.getJSONObject(i).getString("url");
-            Image image = imageRepository.findById(UUID.fromString(url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("."))))
-                    .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
-            s3Service.deleteImage(url);
-            imageRepository.delete(image);
-        }
+        List<String> urls = requestDto.getDelete().stream().map(ImageDDto::getUrl).toList();
+        List<UUID> ids = urls.stream().map(url ->UUID.fromString(url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf(".")))).toList();
+        List<Image> dImages = imageRepository.findAllById(ids);
+
+        //받은 url개수와 찾은 이미지 개수가 다르면 이미지를 못찾은 것, 제대로 찾았다면 데이터 삭제
+        if(dImages.size() != ids.size()) throw new BusinessException(ErrorCode.IMAGE_NOT_FOUND);
+        imageRepository.deleteAll(dImages);
+
+        //커밋에 성공시 s3에서 이미지 삭제
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            @Override public void afterCommit() {
+                s3Service.deleteImages(urls);
+            }
+        });
+
 
         //기존 이미지 인덱스 수정
-        JSONArray update = jsonObject.getJSONArray("update");
-        for(int i = 0; i < update.length(); i++) {
-            Image image = imageRepository.findById(UUID.fromString(update.getJSONObject(i).getString("imageId")))
+        List<ImageUDto> update = requestDto.getUpdate();
+        for (ImageUDto imageUDto : update) {
+            Image image = imageRepository.findById(UUID.fromString(imageUDto.getImageId()))
                     .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
-            image.updateIndex(update.getJSONObject(i).getInt("index"));
+            image.updateIndex(imageUDto.getIndex());
         }
 
         //새로운 이미지 업로드
-        JSONArray create = jsonObject.getJSONArray("create");
-        if(create.length() != files.size()) throw new BusinessException(ErrorCode.MISMATCHED_IMAGE_COUNT);
-        for(int i = 0; i < create.length(); i++) {
+        List<ImageCDto> create = requestDto.getCreate();
+        List<Image> cImages = new ArrayList<>(create.size());
+        List<String> cUrls = new ArrayList<>(create.size());
+        //받은 인덱스 개수와 파일 개수가 다르면 오류
+        if(create.size() != files.size()) throw new BusinessException(ErrorCode.MISMATCHED_IMAGE_COUNT);
+        for(int i = 0; i < create.size(); i++) {
             UUID imageId = UUID.randomUUID();
             //s3업로드
             String imageUrl = s3Service.uploadImage(imageCategory.toString(), categoryid.toString(), files.get(i), imageId.toString());
-            //db업로드
-            Image image = new Image(imageId, imageCategory, categoryid, imageUrl, create.getJSONObject(i).getInt("index"));
-            imageRepository.save(image);
+            cUrls.add(imageUrl);
+            cImages.add(new Image(imageId, imageCategory, categoryid, imageUrl, create.get(i).getIndex()));
         }
+        //db업로드
+        imageRepository.saveAll(cImages);
+
+        //트랜잭션 롤백시 방금 올린 S3들을 보상 삭제
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            @Override public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    try {
+                        s3Service.deleteImages(cUrls);
+                    }catch (Exception e) {
+                        //보상 삭제 실패시 로그 남기기
+                        log.error("S3 cleanup failed after rollback: {}", cUrls, e);
+                    }
+                }
+            }
+        });
 
         //인덱스 맞는지 확인
         List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(imageCategory, categoryid);
