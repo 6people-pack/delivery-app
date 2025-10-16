@@ -2,10 +2,8 @@ package com.sparta.delivery.security.filter;
 
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
-import com.sparta.delivery.global.unit.utils.CookieUtils;
-import com.sparta.delivery.security.JwtUtil;
+import com.sparta.delivery.security.jwt.utils.JwtUtil;
 import com.sparta.delivery.security.userdetails.UserDetailsServiceImpl;
-import com.sparta.delivery.user.domain.User;
 import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -48,20 +46,11 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 setAuthentication(info.getSubject());                    // 인증 진행, getSubject() = email
 
             } catch (ExpiredJwtException e) { //엑세스 토큰 만료
-                String email = e.getClaims().getSubject();
-                String refreshToken = CookieUtils.getRefreshTokenCookie(req); // 쿠키에서 리프레시 토큰 가져옴
-                jwtUtil.validateToken(refreshToken);                    // 갖고있는 리프레시 jwt토큰 자체를 검증
-
-                // db에 있는 토큰과 동일한 토큰인지 검증
-                User user = userDetailsService.findByEmailOrElseThrow(email);
-                jwtUtil.validateRefreshToken(user, refreshToken);
-
-                // 새로운 엑세스 토큰 발급
-                jwtUtil.issueAndSetAccessToken(res, email);
-                setAuthentication(email);
+                log.error("엑세스 토큰 만료");
+                throw new BusinessException(ErrorCode.EXPIRED_ACCESS_TOKEN);
 
             } catch (JwtException e) {
-                log.error("Invalid JWT signature, 유효하지 않는 JWT 서명입니다.");
+                log.error("엑세스 토큰: 유효하지 않는 JWT 서명입니다.");
                 throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN); // 401
             }
 
