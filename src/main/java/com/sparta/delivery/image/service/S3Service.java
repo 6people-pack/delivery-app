@@ -43,6 +43,7 @@ public class S3Service {
 
             return url.toString();
         } catch (Exception e) {
+            log.warn("Failed to upload file to S3", e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
         }
     }
@@ -76,6 +77,7 @@ public class S3Service {
 
             log.info("Deleted {} objects under prefix '{}'", toDelete.size(), prefix);
         } catch (Exception e) {
+            log.warn("Failed to delete folder in S3", e);
             throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
         }
     }
@@ -102,6 +104,7 @@ public class S3Service {
             log.info("Deleted {} objects from S3.", deleted.size());
             log.info("delete errors: {}", res.errors());
         } catch (Exception e) {
+            log.warn("Failed to delete images in S3", e);
             throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
         }
     }
