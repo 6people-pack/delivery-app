@@ -52,3 +52,6 @@ discord:
   bot:
     token: ${DISCORD_BOT_TOKEN}
     channel: ${DISCORD_CHANNEL_ID}
+
+gemini:
+  api-key: ${GEMINI_API_KEY}

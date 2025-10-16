@@ -3,6 +3,7 @@ package com.sparta.delivery.ai.service;
 import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,9 @@ public class AiApiService {
         this.aiService = aiService;
     }
 
-    //todo : api key 숨기기
+    @Value("${gemini.api-key}")
+    private String apikey;
+
     //todo : 응답 안받았을때 대응 필요
     public AiSimpleResponseDto getAnswerFromAi(String question) {
         //요청 url 만들기
@@ -39,7 +42,7 @@ public class AiApiService {
         log.info("uri = " + uri);
         RequestEntity<String> requestEntity = RequestEntity
                 .post(uri)
-                .header("x-goog-api-key","AIzaSyC6oQVtyAm7afSkGVlBq-XYr73ZEfjydNg")
+                .header("x-goog-api-key",apikey)
                 .header("Content-Type","application/json")
                 .body(fromQuestiontoJSON(question));
 
