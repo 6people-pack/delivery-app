@@ -146,15 +146,14 @@ public class RestaurantService {
 
     // 별점 반영
     @Transactional
-    public void editRating(UUID restaurantId, RatingRequestDto requestDto) {
+    public void editRating(UUID restaurantId, RatingRequestDto dto) {
         Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(restaurantId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
 
-        // review count, total rating 생성해 계산 -> 리뷰 삭제(DELETE), 생성(UPDATE) 고려
-        if (requestDto.status().equals(RatingStatus.UPDATE)) {
-            restaurant.updateRating(requestDto.rating());
-        } else {
-            restaurant.deleteRating(requestDto.rating());
+        if (dto.status() == RatingStatus.UPDATE) {
+            restaurant.addRating(dto.rating());
+        } else { // DELETE
+            restaurant.removeRating(dto.rating());
         }
     }
 
