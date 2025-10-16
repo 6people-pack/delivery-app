@@ -70,14 +70,14 @@ public enum ErrorCode {
     NICKNAME_ALREADY_EXISTS(HttpStatus.NOT_FOUND, "해당 닉네임은 이미 존재합니다."),
     RESTAURANT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 식당입니다."),
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 카테고리입니다"),
-    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND,"존재하지 않는 리뷰입니다." ),
+//    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND,"존재하지 않는 리뷰입니다." ),
     S3_FOLDER_NO_FILE(HttpStatus.NOT_FOUND, "S3 폴더에 파일이 존재하지 않습니다."),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장바구니 메뉴입니다."),
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 메뉴입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "리프레시 토큰이 존재하지 않습니다."),
 
     // 409 Conflict
-    NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임은 이미 존재합니다."),
+//    NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임은 이미 존재합니다."),
     BUSINESS_CODE_EXISTS(HttpStatus.CONFLICT, "존재하는 사업자 번호 입니다."),
     CATEGORY_NAME_EXISTS(HttpStatus.CONFLICT, "존재하는 카테고리 이름 입니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "존재하는 이메일 입니다.");
