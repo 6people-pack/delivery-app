@@ -56,6 +56,10 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 주문이 존재하지 않습니다."),
     NOT_FIND_INQUIRY(HttpStatus.NOT_FOUND, "문의 정보가 존재하지 않습니다."),
     AI_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 ai사용 기록이 존재하지 않습니다."),
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰가 존재하지 않습니다."),
+    PARENT_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "부모 댓글을 찾을 수 없습니다."),
+
+    PARENT_REVIEW_MISMATCH(HttpStatus.BAD_REQUEST, "부모 댓글은 동일 리뷰에 속해야 합니다."),
 
     //409
     NICKNAME_ALREADY_EXISTS(HttpStatus.NOT_FOUND, "해당 닉네임은 이미 존재합니다."),
