@@ -2,9 +2,10 @@ package com.sparta.delivery.order.controller;
 
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
-import com.sparta.delivery.order.dto.CancelOrderOwnerDto;
-import com.sparta.delivery.order.dto.GetOrderDto;
-import com.sparta.delivery.order.dto.CreateOrderDto;
+import com.sparta.delivery.order.dto.CancelOrderOwnerRequestDto;
+import com.sparta.delivery.order.dto.GetOrderDetailResponseDto;
+import com.sparta.delivery.order.dto.GetOrderResponseDto;
+import com.sparta.delivery.order.dto.CreateOrderRequestDto;
 import com.sparta.delivery.order.service.OrderService;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
@@ -26,24 +27,39 @@ public class OrderController {
     @PostMapping("/")
     public BaseResponse<Void> createOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid CreateOrderDto dto) {
+            @RequestBody @Valid CreateOrderRequestDto dto) {
 
         orderService.createOrder(userDetails.getUser(), dto);
         return BaseResponse.ok(BaseStatus.CREATED);
     }
 
-    // 주문 조회
+    // 전체 주문 조회(고객)
     @GetMapping("/")
-    public BaseResponse<List<GetOrderDto>> getOrders(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public BaseResponse<List<GetOrderResponseDto>> getOrders(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return BaseResponse.ok(orderService.getOrders(userDetails.getUser()), BaseStatus.OK);
     }
 
-    // 주문 상세 조회, 결제 시스템에서 어떤 데이터 제공하는지 보고
+    // 단일 주문 상세 조회
+    @GetMapping("/{orderId}")
+    public BaseResponse<GetOrderDetailResponseDto> getOrdersDetail(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable("orderId") UUID orderId) {
 
-    // 영수증 조회, 결제 시스템에서 어떻게 반환하는지 보고
+        return BaseResponse.ok(orderService.getOrdersDetail(userDetails.getUser(), orderId), BaseStatus.OK);
+    }
+
+    // 가게 주문 현황 조회(점주)
+    // 개선 사항 페이징 처리
+    @GetMapping("/owner/{restaurantId}")
+    public BaseResponse<List<GetOrderDetailResponseDto>> getOrdersOwner(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable("restaurantId") UUID restaurantId) {
+
+        return BaseResponse.ok(orderService.getOrdersOwner(userDetails.getUser(), restaurantId), BaseStatus.OK);
+    }
 
     // 주문 취소(고객), 수락 전이라면 취소 가능
-    @PostMapping("/{orderId}/cancle")
+    @PatchMapping("/{orderId}/cancel")
     public BaseResponse<Void> cancelOrderCustomer(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable("orderId") UUID orderId) {
@@ -53,17 +69,17 @@ public class OrderController {
     }
 
     // 주문 취소(점주), 수락 후 취소 시, 메세지 동반
-    @PostMapping("/owner/cancle")
+    @PatchMapping("/owner/cancel")
     public BaseResponse<Void> cancelOrderOwner(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid CancelOrderOwnerDto dto) {
+            @RequestBody @Valid CancelOrderOwnerRequestDto dto) {
 
         orderService.cancelOrderOwner(userDetails.getUser(), dto);
         return BaseResponse.ok(BaseStatus.OK);
     }
 
     // 주문 상태 변경(점주), 주문 요청에 대해 수락, 배달, 완료 (배달하기 요청을 보내고 바로 완료 요청이 왔다고 가정하고 완료 처리)
-    @PostMapping("/owner/{orderId}/status")
+    @PatchMapping("/owner/{orderId}/status")
     public BaseResponse<Void> updateOrderStatus(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable("orderId") UUID orderId) {

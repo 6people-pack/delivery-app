@@ -3,7 +3,6 @@ package com.sparta.delivery.image.dto;
 import lombok.Getter;
 
 @Getter
-public class ImageRequestDto {
-    private String categoryid;
+public class ImageCDto {
     private int index;
 }

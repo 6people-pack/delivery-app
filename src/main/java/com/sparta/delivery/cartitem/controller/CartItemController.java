@@ -1,9 +1,9 @@
 package com.sparta.delivery.cartitem.controller;
 
-import com.sparta.delivery.cartitem.dto.AddCartItemDto;
-import com.sparta.delivery.cartitem.dto.GetCartItemDto;
-import com.sparta.delivery.cartitem.dto.updateCartItemOptionDto;
-import com.sparta.delivery.cartitem.dto.updateCartItemQuantityDto;
+import com.sparta.delivery.cartitem.dto.AddCartItemRequestDto;
+import com.sparta.delivery.cartitem.dto.GetCartItemResponseDto;
+import com.sparta.delivery.cartitem.dto.updateCartItemOptionRequestDto;
+import com.sparta.delivery.cartitem.dto.updateCartItemQuantityRequestDto;
 import com.sparta.delivery.cartitem.service.CartItemService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
@@ -27,15 +27,15 @@ public class CartItemController {
     @PostMapping("/")
     public BaseResponse<Void> addCartItem(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid AddCartItemDto dto) {
+            @RequestBody @Valid AddCartItemRequestDto dto) {
 
         cartItemService.addCartItem(userDetails.getUser(), dto);
-        return BaseResponse.ok(BaseStatus.CREATED);
+        return BaseResponse.ok(BaseStatus.OK);
     }
 
     // 장바구니 메뉴 조회
     @GetMapping("/")
-    public BaseResponse<List<GetCartItemDto>> getCartItems(@AuthenticationPrincipal UserDetailsImpl userDetails){
+    public BaseResponse<List<GetCartItemResponseDto>> getCartItems(@AuthenticationPrincipal UserDetailsImpl userDetails){
         return BaseResponse.ok(cartItemService.getCartItems(userDetails.getUser()), BaseStatus.OK);
     }
 
@@ -43,14 +43,14 @@ public class CartItemController {
     @PatchMapping("/quantity")
     public BaseResponse<Void> updateCartItemQuantity(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid updateCartItemQuantityDto dto) {
+            @RequestBody @Valid updateCartItemQuantityRequestDto dto) {
 
         cartItemService.updateCartItemQuantity(userDetails.getUser(), dto);
         return BaseResponse.ok(BaseStatus.OK);
     }
 
     // 장바구니 메뉴 삭제
-    @DeleteMapping("/{cartItemId}")
+    @PatchMapping("/{cartItemId}")
     public BaseResponse<Void> deleteCartItem(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable("cartItemId") UUID cartItemId) {
@@ -63,7 +63,7 @@ public class CartItemController {
     @PatchMapping("/options")
     public BaseResponse<Void> updateCartItemOption(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid updateCartItemOptionDto dto) {
+            @RequestBody @Valid updateCartItemOptionRequestDto dto) {
 
         cartItemService.updateCartItemOption(userDetails.getUser(), dto);
         return BaseResponse.ok(BaseStatus.OK);
