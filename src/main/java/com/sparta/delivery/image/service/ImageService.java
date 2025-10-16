@@ -64,7 +64,6 @@ public class ImageService {
     //이미지 다건 수정
     //todo : s3 업로드, 삭제 실패시 결과도 확인
     //todo : 메서드 분리하기
-    //todo : menu에서 restaurant를 가져오는 방법 바뀐 것 확인하기
     @Transactional
     public ImageMultiResponseDto updateAllImage(Long userId, ImageUpdateRequestDto requestDto , List<MultipartFile> files) {
         ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
