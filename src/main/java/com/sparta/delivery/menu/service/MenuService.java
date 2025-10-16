@@ -30,8 +30,8 @@ public class MenuService {
 
     public MenuResponseDto create(MenuCreateRequestDto req) {
         // 식당 프록시 참조 (ID만으로 참조)
-        Restaurant restaurantRef = em.getReference(Restaurant.class, req.restaurantId());
-        Menu menu = menuMapper.toEntity(req, restaurantRef);
+//        Restaurant restaurantRef = em.getReference(Restaurant.class, req.restaurantId());
+        Menu menu = menuMapper.toEntity(req, req.restaurantId());
         Menu saved = menuRepository.save(menu);
         return menuMapper.toResponse(saved);
     }
@@ -44,7 +44,7 @@ public class MenuService {
     // 요약 DTO로 가볍게 내려주려면 mapper에서 요약 변환 메서드 따로 쓰면 됨
     @Transactional(readOnly = true)
     public List<MenuResponseDto> listByRestaurant(UUID restaurantId) {
-        List<Menu> menus = menuRepository.findByRestaurantIdWithRestaurant(restaurantId); // ⬇️ 2번
+        List<Menu> menus = menuRepository.findByRestaurantId(restaurantId); // ⬇️ 2번
         return menus.stream().map(menuMapper::toResponse).toList();
     }
 

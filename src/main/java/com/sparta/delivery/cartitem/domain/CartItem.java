@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 import java.util.UUID;
 
@@ -12,20 +13,17 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "p_cart_item")
+@Where(clause = "deleted_at IS NULL")
 public class CartItem extends BaseEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "cart_item_id", columnDefinition = "uuid")
     private UUID id;
 
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
-    }
-
     private Long userId;
+
+    private UUID restaurantId;
 
     private UUID menuId;
 
@@ -38,10 +36,11 @@ public class CartItem extends BaseEntity {
     private int quantity;
 
     // 장바구니에 메뉴 생성
-    public static CartItem createCartItem(Long userId, UUID menuId, String option, int quantity) {
+    public static CartItem createCartItem(Long userId, UUID menuId, UUID restaurantId, String option, int quantity) {
         CartItem cartItem = new CartItem();
         cartItem.userId = userId;
         cartItem.menuId = menuId;
+        cartItem.restaurantId = restaurantId;
         cartItem.option = option;
         cartItem.quantity = quantity;
         return cartItem;
