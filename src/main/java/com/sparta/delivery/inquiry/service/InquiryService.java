@@ -1,6 +1,7 @@
 package com.sparta.delivery.inquiry.service;
 
 
+import com.sparta.delivery.comment.repository.CommentRepository;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.global.unit.common.BaseResponse;
@@ -33,19 +34,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class InquiryService {
 
     private final InquiryRepository inquiryRepository;
-    //private final PreSignedProvider preSignedProvider;
-    //private final CommentQueryService commentQueryService;
-    //private final ImageQueryService imageQueryService;
+    private final CommentRepository commentRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepository userRepository;
-    private final ChatClient chatClient;
 
 
     // 문의글 생성
     @Transactional
     public void createNewInquiry(long userId, InquiryCreateRequestDto request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        Inquiry inquiry = InquiryMapper.toInquiry(request, user);
+        Inquiry inquiry = Inquiry.toInquiry(request, user);
         inquiryRepository.save(inquiry);
         eventPublisher.publishEvent(new InquiryCreateEvent(inquiry, user));
     }
@@ -63,10 +61,7 @@ public class InquiryService {
             nextCursor = content.get(content.size()-1).getId();
         }
         List<InquiryItem> inquiryItems = inquirySlice.stream().map(inquiry -> {
-
-            //int answerCount = commentQueryService.findCommentSize(inquiry.getId());
-            int answerCount = 0; //TODO 댓글 작업 필요
-
+            long answerCount = commentRepository.countByInquiry_Id(inquiry.getId());
             return InquiryMapper.fromInquiryItem(inquiry, answerCount);
         }).toList();
 
@@ -84,27 +79,9 @@ public class InquiryService {
         if (!user.getRole().equals(Role.ADMIN) && !inquiry.getUserId().equals(user.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
-
         return InquiryMapper.fromInquiry(inquiry);
 
     }
 
-    // 해당 위치에서 변경 예정
 
-    public BaseResponse<String> getAiAnswer(String message){
-        try {
-            String answer = chatClient
-                .prompt()
-                .user(message)
-                .call()
-                .content();
-
-            if (answer == null || answer.isBlank()) {
-                answer = "응답이 완성되질 않음";
-            }
-            return BaseResponse.ok(answer, BaseStatus.OK);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.AI_SERVICE_UNAVAILABLE);
-        }
-    }
 }

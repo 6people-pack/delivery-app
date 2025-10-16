@@ -56,10 +56,5 @@ public class InquiryController {
             return BaseResponse.ok(inquiryService.getOneInquiry(userDetails.getUser().getId(), inquiryId), BaseStatus.OK);
         }
 
-        @ResponseStatus(HttpStatus.OK)
-        @PostMapping("/ai/{answer}")
-        public BaseResponse<String> aiRequest(@PathVariable String answer) {
-                return inquiryService.getAiAnswer(answer);
-        }
 
 }

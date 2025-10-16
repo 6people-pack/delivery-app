@@ -2,11 +2,14 @@ spring:
   config:
     import: optional:file:.env[.properties]
   ai:
+    retry:
+      enabled: false
     ollama:
       base-url: http://localhost:11434
       chat:
         options:
-          model: qwen3:4b
+          model: qwen2.5:1.5b
+          num-gpu: 0
           temperature: 0.2
 
   datasource:
@@ -14,6 +17,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
   jpa:
     hibernate:
@@ -23,6 +30,17 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    aws:
+      s3:
+        bucket: ${S3_BUCKET_NAME}
+      credentials:
+        access-key: ${S3_ACCESS_KEY}
+        secret-key: ${S3_SECRET_KEY}
+      region:
+        static: ${S3_REGION}
+    stack:
+      auto: false
 
 
 server:
@@ -34,6 +52,7 @@ jwt:
   expiration:
     access-token: ${JWT_EXPIRATION_ACCESSTOKEN}
     refresh-token: ${JWT_EXPIRATION_REFRESHTOKEN}
+
 
 toss:
   secret-key: ${TOSS_SECRET_KEY}
@@ -56,16 +75,20 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 5
         automatic-transition-from-open-to-half-open-enabled: true
   retry:
-    ai:
-      max-attempts: 3                     # 1+재시도 2
-      wait-duration: 500ms
-      enable-exponential-backoff: true
-      exponential-backoff-multiplier: 2.0
-      max-wait-duration: 5s
-      retry-exceptions:
-        - java.io.IOException
-        - java.util.concurrent.TimeoutException
-        - org.springframework.web.reactive.function.client.WebClientResponseException
+    instances:
+      ai:
+        max-attempts: 3                     # 1+재시도 2
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2.0
+        exponential-max-wait-duration: 5s
+        retry-exceptions: # 재시도 대상 예외를 여기서 지정
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - com.sparta.delivery.inquiry.exception.RetryableAiException
+        ignore-exceptions:
+          - org.springframework.ai.retry.TransientAiException   # Spring AI가 감싸는 500 예외 전체는 재시도 제외
 
   ratelimiter:
     instances:

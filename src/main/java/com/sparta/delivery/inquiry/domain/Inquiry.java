@@ -1,6 +1,7 @@
 package com.sparta.delivery.inquiry.domain;
 
 import com.sparta.delivery.global.unit.common.BaseEntity;
+import com.sparta.delivery.inquiry.dto.InquiryCreateRequestDto;
 import com.sparta.delivery.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,6 +43,14 @@ public class Inquiry extends BaseEntity {
         this.title = title;
         this.content = content;
         this.userId = user;
+    }
+
+    public static Inquiry toInquiry(InquiryCreateRequestDto inquiryCreateRequestDto, User user) {
+        return Inquiry.builder()
+            .title(inquiryCreateRequestDto.title())
+            .content(inquiryCreateRequestDto.content())
+            .user(user.getId())
+            .build();
     }
 
 
