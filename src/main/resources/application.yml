@@ -3,7 +3,7 @@ spring:
     import: optional:file:.env[.properties]
   ai:
     retry:
-      enabled: false
+      enabled: false #Spring AI 내부 재시도를 끄고, Resilience4j의 Retry/RateLimiter/CircuitBreaker 조합으로 안정성을 관리
     ollama:
       base-url: http://localhost:11434
       chat:
@@ -64,7 +64,7 @@ discord:
     channel: ${DISCORD_CHANNEL_ID}
 
 resilience4j:
-  circuitbreaker:
+  circuitbreaker:                           # 실패율이 높아지면 회로 OPEN으로 빠르게 차단
     instances:
       ai:
         sliding-window-type: TIME_BASED      # 시간 기준
@@ -74,7 +74,7 @@ resilience4j:
         wait-duration-in-open-state: 30s     # 30초 동안 차단
         permitted-number-of-calls-in-half-open-state: 5
         automatic-transition-from-open-to-half-open-enabled: true
-  retry:
+  retry:                                    # 복구 가능 예외에 한해 재시도
     instances:
       ai:
         max-attempts: 3                     # 1+재시도 2
@@ -86,13 +86,17 @@ resilience4j:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
           - org.springframework.web.reactive.function.client.WebClientResponseException
-          - com.sparta.delivery.inquiry.exception.RetryableAiException
+          - com.sparta.delivery.inquiry.exception.RetryableAiException # 로컬 모델 프로세스가 죽은 경우, 재시도해도 의미 없음. 즉시 DLQ로 보내는 게 나을 거 같아 넣음
         ignore-exceptions:
           - org.springframework.ai.retry.TransientAiException   # Spring AI가 감싸는 500 예외 전체는 재시도 제외
+          - io.github.resilience4j.ratelimiter.RequestNotPermitted # 토큰 부족시 재시도 금지
 
-  ratelimiter:
+  ratelimiter:                              # 초당 처리량(허용량)을 제한, 토큰이 없으면 최대 500ms 대기
     instances:
       ai:
-        limit-for-period: 10                # (선택) 초당 10건
+        limit-for-period: 10                # 초당 10건
         limit-refresh-period: 1s
-        timeout-duration: 0s
+        timeout-duration: 500ms   # 토큰이 없으면 최대 500ms 기다렸다가 진행(대기 허용)
+
+        # 호출 1건당 토큰 1개 소비가 되는데 limit-for-period: 10 가 10이니 리필 주기마다 토큰 10개까 채워짐
+        # limit-refresh-period: 1s로 도어 매 1초마다 10개 충전된다. 만약 500ms 안에 토큰을 못 받으면 RequestNotPermitted 예외로 실패
