@@ -33,7 +33,7 @@ public class InquiryCommentController {
 
     @GetMapping
     public Page<CommentResponseDto> list(@PathVariable UUID inquiryId,
-                                         @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+                                         @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.ASC)
                                          Pageable pageable) {
         return service.listByInquiry(inquiryId, pageable);
     }

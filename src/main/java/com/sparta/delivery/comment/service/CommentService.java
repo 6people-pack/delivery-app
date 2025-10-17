@@ -4,16 +4,20 @@ import com.sparta.delivery.comment.domain.Comment;
 import com.sparta.delivery.comment.dto.CommentCreateRequestDto;
 import com.sparta.delivery.comment.dto.CommentResponseDto;
 import com.sparta.delivery.comment.repository.CommentRepository;
+import com.sparta.delivery.global.exception.BusinessException;
+import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.repository.InquiryRepository;
 import com.sparta.delivery.review.domain.Review;
 import com.sparta.delivery.review.repository.ReviewRepository;
+import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -31,6 +35,14 @@ public class CommentService {
     @Transactional
     public CommentResponseDto createForReview(Long loginUserId, UUID reviewId, CommentCreateRequestDto req) {
         User user = userRepository.getReferenceById(loginUserId);
+        Role userRole = user.getRole();
+
+        // ADMIN, 해당 식당 OWNER 사용자만 문의 댓글 생성가능
+        if (!(userRole.equals(Role.ADMIN) ||
+                (userRole.equals(Role.OWNER) && loginUserId.equals(req.ownerId())))) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰가 없어요."));
 
@@ -47,6 +59,13 @@ public class CommentService {
     @Transactional
     public CommentResponseDto createForInquiry(Long loginUserId, UUID inquiryId, CommentCreateRequestDto req) {
         User user = userRepository.getReferenceById(loginUserId);
+        Role userRole = user.getRole();
+
+        // ADMIN 사용자만 문의 댓글 생성가능
+        if (!userRole.equals(Role.ADMIN)) {
+            throw new BusinessException(ErrorCode.NOT_ADMIN);
+        }
+
         Inquiry inquiry = inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new IllegalArgumentException("문의가 없어요."));
 
@@ -57,6 +76,12 @@ public class CommentService {
                 Comment.forInquiry(req.content(), user, inquiry, parent)
         );
         return CommentResponseDto.of(saved);
+    }
+
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveAiComment(String answer, User user, Inquiry inquiry) {
+        commentRepository.save(Comment.forInquiry(answer, user, inquiry, null));
     }
 
     /** 리뷰 댓글 조회 */
