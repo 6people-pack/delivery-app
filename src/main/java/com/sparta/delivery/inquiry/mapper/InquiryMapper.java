@@ -12,19 +12,11 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InquiryMapper {
-    public static Inquiry toInquiry(InquiryCreateRequestDto inquiryCreateRequestDto, User user) {
-        return Inquiry.builder()
-            .title(inquiryCreateRequestDto.title())
-            .content(inquiryCreateRequestDto.content())
-            .user(user)
-            .build();
-    }
-
     public static InquiryOneGetResponseDto fromInquiry(Inquiry inquiry) {
         return new InquiryOneGetResponseDto(inquiry.getTitle(), inquiry.getContent());
     }
 
-    public static InquiryItem fromInquiryItem(Inquiry inquiry, int answerCount) {
+    public static InquiryItem fromInquiryItem(Inquiry inquiry, long answerCount) {
         return InquiryItem.builder()
             .InquiryId(inquiry.getId())
             .title(inquiry.getTitle())

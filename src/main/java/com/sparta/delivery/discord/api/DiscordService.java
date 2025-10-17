@@ -2,6 +2,7 @@ package com.sparta.delivery.discord.api;
 
 
 import com.sparta.delivery.discord.message.DiscordMessageConverter;
+import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.message.InquiryMessage;
 import com.sparta.delivery.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +25,13 @@ public class DiscordService {
 
 
     // 사용자 문의 요청
-    public void InquirySendMessageToDiscord(User user, String title, String content ) {
+    public void InquirySendMessageToDiscord(User user, Inquiry inquiry) {
         log.info("Inquiry Send Message To Discord");
         TextChannel channel = jda.getTextChannelById(channelId);
         if (channel == null) {
             log.info("Channel not found");
         }
-        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new InquiryMessage(user, title, content));
+        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new InquiryMessage(user, inquiry.getTitle(), inquiry.getContent()));
         channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
     }
 // TODO 식당이 아직 없음

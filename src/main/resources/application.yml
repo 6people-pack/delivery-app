@@ -1,6 +1,16 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  ai:
+    retry:
+      enabled: false
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen2.5:1.5b
+          num-gpu: 0
+          temperature: 0.2
 
   datasource:
     url: ${DB_URL}
@@ -52,3 +62,37 @@ discord:
   bot:
     token: ${DISCORD_BOT_TOKEN}
     channel: ${DISCORD_CHANNEL_ID}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ai:
+        sliding-window-type: TIME_BASED      # 시간 기준
+        sliding-window-size: 120             # 120초(2분) 동안의 통계
+        minimum-number-of-calls: 50          # 최소 표본 수
+        failure-rate-threshold: 50           # 실패율 50% 넘으면 OPEN
+        wait-duration-in-open-state: 30s     # 30초 동안 차단
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      ai:
+        max-attempts: 3                     # 1+재시도 2
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2.0
+        exponential-max-wait-duration: 5s
+        retry-exceptions: # 재시도 대상 예외를 여기서 지정
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - com.sparta.delivery.inquiry.exception.RetryableAiException
+        ignore-exceptions:
+          - org.springframework.ai.retry.TransientAiException   # Spring AI가 감싸는 500 예외 전체는 재시도 제외
+
+  ratelimiter:
+    instances:
+      ai:
+        limit-for-period: 10                # (선택) 초당 10건
+        limit-refresh-period: 1s
+        timeout-duration: 0s

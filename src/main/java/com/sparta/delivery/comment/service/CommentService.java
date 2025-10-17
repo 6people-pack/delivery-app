@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -57,6 +58,12 @@ public class CommentService {
                 Comment.forInquiry(req.content(), user, inquiry, parent)
         );
         return CommentResponseDto.of(saved);
+    }
+
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveAiComment(String answer, User user, Inquiry inquiry) {
+        commentRepository.save(Comment.forInquiry(answer, user, inquiry, null));
     }
 
     /** 리뷰 댓글 조회 */
