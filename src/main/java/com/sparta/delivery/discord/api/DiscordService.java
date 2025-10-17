@@ -51,7 +51,7 @@ public class DiscordService {
 
     public void AiFailSendMessageToDiscord(Long userId, String category, String categoryId, String reason, String errorMessage) {
         log.info("AI Failed Send Message To Discord");
-        TextChannel channel = jda.getTextChannelById(channelId);
+        TextChannel channel = jda.getTextChannelById(aiChannelId);
         MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new AiFailMessage(userId, category, categoryId, reason,errorMessage));
         channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
     }
