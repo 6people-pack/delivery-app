@@ -11,7 +11,6 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
@@ -43,38 +42,44 @@ public class S3Service {
             log.info("File uploaded to S3: {}", fileName);
 
             return url.toString();
-        }catch (IOException e) {
+        } catch (Exception e) {
+            log.warn("Failed to upload file to S3", e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
         }
     }
 
     public void deleteFolder(String category, String categoryId) {
-        String prefix = category + "/" + categoryId + "/";
+        try {
+            String prefix = category + "/" + categoryId + "/";
 
-        ListObjectsV2Response listRes = amazonS3Client.listObjectsV2(
-                ListObjectsV2Request.builder()
-                        .bucket(bucket)
-                        .prefix(prefix)
-                        .build()
-        );
+            ListObjectsV2Response listRes = amazonS3Client.listObjectsV2(
+                    ListObjectsV2Request.builder()
+                            .bucket(bucket)
+                            .prefix(prefix)
+                            .build()
+            );
 
-        List<ObjectIdentifier> toDelete = listRes.contents().stream()
-                .map(obj -> ObjectIdentifier.builder().key(obj.key()).build())
-                .toList();
+            List<ObjectIdentifier> toDelete = listRes.contents().stream()
+                    .map(obj -> ObjectIdentifier.builder().key(obj.key()).build())
+                    .toList();
 
-        //해당 폴더가 없는 경우
-        if (toDelete.isEmpty()) {
-            throw new BusinessException(ErrorCode.S3_FOLDER_NO_FILE);
+            //해당 폴더가 없는 경우
+            if (toDelete.isEmpty()) {
+                throw new BusinessException(ErrorCode.S3_FOLDER_NO_FILE);
+            }
+
+            Delete del = Delete.builder().objects(toDelete).build();
+
+            amazonS3Client.deleteObjects(DeleteObjectsRequest.builder()
+                    .bucket(bucket)
+                    .delete(del)
+                    .build());
+
+            log.info("Deleted {} objects under prefix '{}'", toDelete.size(), prefix);
+        } catch (Exception e) {
+            log.warn("Failed to delete folder in S3", e);
+            throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
         }
-
-        Delete del = Delete.builder().objects(toDelete).build();
-
-        amazonS3Client.deleteObjects(DeleteObjectsRequest.builder()
-                .bucket(bucket)
-                .delete(del)
-                .build());
-
-        log.info("Deleted {} objects under prefix '{}'", toDelete.size(), prefix);
     }
 
     public void deleteImages(List<String> urls) {
@@ -98,8 +103,8 @@ public class S3Service {
             List<DeletedObject> deleted = res.deleted();
             log.info("Deleted {} objects from S3.", deleted.size());
             log.info("delete errors: {}", res.errors());
-        }catch (S3Exception e) {
-            // 실패 시 여기로 들어옴
+        } catch (Exception e) {
+            log.warn("Failed to delete images in S3", e);
             throw new BusinessException(ErrorCode.FILE_DELETE_ERROR);
         }
     }
