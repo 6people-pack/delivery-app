@@ -3,6 +3,7 @@ package com.sparta.delivery.security.filter;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.security.jwt.utils.JwtUtil;
+import com.sparta.delivery.security.service.TokenBlacklistService;
 import com.sparta.delivery.security.userdetails.UserDetailsServiceImpl;
 import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
@@ -28,6 +29,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -38,20 +40,39 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         // 헤더에서 엑세스토큰 가져옴
         String accessToken = jwtUtil.getJwtFromHeader(req);
-        log.info("accessToken " + accessToken);
-        if (StringUtils.hasText(accessToken)) { // 공백이 아닌 문자열이 있으면 true(= 토큰이 있다면)
 
+        if (StringUtils.hasText(accessToken)) { // 공백이 아닌 문자열이 있으면 true(= 토큰이 있다면)
             try {
                 Claims info = jwtUtil.getUserInfoFromToken(accessToken); // 파싱 및 검증
+
+                // 블랙리스트 검증
+                if (tokenBlacklistService.isBlacklisted(accessToken)) { throw new BusinessException(ErrorCode.BLACKLIST_TOKEN); }
+
                 setAuthentication(info.getSubject());                    // 인증 진행, getSubject() = email
 
             } catch (ExpiredJwtException e) { //엑세스 토큰 만료
                 log.error("엑세스 토큰 만료");
                 throw new BusinessException(ErrorCode.EXPIRED_ACCESS_TOKEN);
 
+            } catch (SecurityException e) {
+                log.error("엑세스 토큰: 서명 검증에 실패했습니다. - {}", e.getMessage());
+                throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+
+            } catch (MalformedJwtException e) {
+                log.error("엑세스 토큰: 잘못된 형식의 JWT입니다. - {}", e.getMessage());
+                throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+
+            } catch (UnsupportedJwtException e) {
+                log.error("엑세스 토큰: 지원하지 않는 JWT 형식입니다. - {}", e.getMessage());
+                throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
+
+            } catch (IllegalArgumentException e) {
+                log.error("엑세스 토큰: 토큰이 비어있거나 잘못 전달되었습니다. - {}", e.getMessage());
+                throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
             } catch (JwtException e) {
-                log.error("엑세스 토큰: 유효하지 않는 JWT 서명입니다.");
-                throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN); // 401
+                // 위에서 잡히지 않은 나머지 JWT 관련 예외
+                log.error("엑세스 토큰: 유효하지 않은 JWT 서명입니다. - {}", e.getMessage());
+                throw new BusinessException(ErrorCode.INVALID_JWT_TOKEN);
             }
 
         }

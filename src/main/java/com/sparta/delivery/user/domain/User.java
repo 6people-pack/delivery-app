@@ -26,8 +26,8 @@ public class User extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    private Role role = Role.CUSTOMER;
+    @Column(length = 40, nullable = false)
+    private String name;
 
     @Column(nullable = false)
     private String nickname;
@@ -38,34 +38,31 @@ public class User extends BaseEntity {
     @Column(name = "refresh_token")
     private String refreshToken;
 
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
     // 고객 회원 생성
-    public static User createCustomer(String email, String password, String nickname, String phoneNumber, Role role) {
+    public static User createCustomer(String email, String password, String name, String nickname, String phoneNumber, Role role) {
         User user = new User();
         user.email = email;
         user.password = password;
+        user.name = name;
         user.nickname = nickname;
         user.phoneNumber = phoneNumber;
-        user.role = role;
+        user.role = (role != null) ? role : Role.CUSTOMER;
         return user;
+    }
+
+    // 정보 수정 메서드
+    public void update(String password, String name, String nickname, String phoneNumber){
+        if (password != null) this.password = password;
+        if (name != null) this.name = name;
+        if (nickname != null) this.nickname = nickname;
+        if (phoneNumber != null) this.phoneNumber = phoneNumber;
     }
 
     // 리프레시 토큰 변경 메서드
     public void updateRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
-
-    // 닉네임 변경 메서드
-    public void updateNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    // 핸드폰번호 변경 메서드
-    public void updatePhoneNumber(String phone_number) {
-        this.phoneNumber = phone_number;
-    }
-
-    // 비밀번호 변경 메서드
-    public void updatePassword(String password) {
-        this.password = password;
-    }
 
     // 권한 변경 메서드
     public void updateRole(Role role) {

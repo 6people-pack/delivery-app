@@ -15,6 +15,9 @@ public record SignUpRequestDto(
     @NotBlank(message = "비밀번호 입력은 필수 입력값입니다.")
     String password,
 
+    @NotBlank(message = "이름은 필수 입력값입니다.")
+    String name,
+
     @NotBlank(message = "닉네임은 필수 입력값입니다.")
     String nickname,
 
@@ -29,4 +32,5 @@ public record SignUpRequestDto(
  - [ ]  username은  `최소 4자 이상, 10자 이하이며 알파벳 소문자(a~z), 숫자(0~9)`로 구성
 - [ ]  password는  `최소 8자 이상, 15자 이하이며 알파벳 대소문자(a~z, A~Z), 숫자(0~9), 특수문자`
 - [ ]  사용자 권한 (`CUSTOMER`, `OWNER`, `MANAGER`, `MASTER`)도 필요합니다.
-(MASTER는 최종관리자, MANAGER는 서비스 담당자들 입니다.) **/
+(MASTER는 최종관리자, MANAGER는 서비스 담당자들 입니다.)
+ -> 시간이 모자라요ㅠㅠ **/
