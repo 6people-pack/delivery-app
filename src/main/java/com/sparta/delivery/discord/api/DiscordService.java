@@ -20,14 +20,20 @@ public class DiscordService {
 
     private final JDA jda;
 
-    @Value("${discord.bot.channel}")
-    private String channelId;
+    @Value("${discord.bot.inquiryChannel}")
+    private String inquiryChannelId;
+
+    @Value("${discord.bot.restaurantChannel}")
+    private String restaurantChannelId;
+
+    @Value("${discord.bot.aiChannel}")
+    private String aiChannelId;
 
 
     // 사용자 문의 요청
     public void InquirySendMessageToDiscord(User user, Inquiry inquiry) {
         log.info("Inquiry Send Message To Discord");
-        TextChannel channel = jda.getTextChannelById(channelId);
+        TextChannel channel = jda.getTextChannelById(inquiryChannelId);
         if (channel == null) {
             log.info("Channel not found");
         }

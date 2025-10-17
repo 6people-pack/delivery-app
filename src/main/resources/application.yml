@@ -61,7 +61,9 @@ toss:
 discord:
   bot:
     token: ${DISCORD_BOT_TOKEN}
-    channel: ${DISCORD_CHANNEL_ID}
+    inquiryChannel: ${DISCORD_INQUIRY_CHANNEL_ID}
+    restaurantChannel: ${DISCORD_RESTAURANT_CHANNEL_ID}
+    aiChannel: ${DISCORD_AI_CHANNEL_ID}
 
 resilience4j:
   circuitbreaker:                           # 실패율이 높아지면 회로 OPEN으로 빠르게 차단
