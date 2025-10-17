@@ -5,10 +5,12 @@ import com.sparta.delivery.global.category.ImageCategory;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
 import com.sparta.delivery.image.service.ImageService;
+import com.sparta.delivery.restaurant.domain.ApprovalStatus;
 import com.sparta.delivery.restaurant.domain.RatingStatus;
 import com.sparta.delivery.restaurant.domain.Restaurant;
 import com.sparta.delivery.restaurant.domain.RestaurantCategory;
 import com.sparta.delivery.restaurant.dto.*;
+import com.sparta.delivery.restaurant.event.RestaurantCreateEvent;
 import com.sparta.delivery.restaurant.mapper.RestaurantCategoryMapper;
 import com.sparta.delivery.restaurant.mapper.RestaurantMapper;
 import com.sparta.delivery.restaurant.repository.RestaurantCategoryRepository;
@@ -16,6 +18,7 @@ import com.sparta.delivery.restaurant.repository.RestaurantRepository;
 import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -36,29 +39,42 @@ public class RestaurantService {
     private final RestaurantCategoryRepository restaurantCategoryRepository;
     private final CategoryRepository categoryRepository;
     private final ImageService imageService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 식당 등록
     @Transactional
     public void createRestaurant(User user, RestaurantRequestDto requestDto, List<MultipartFile> restaurantImage) {
-//        validateUser(user);
+        validateUser(user);
         if (restaurantRepository.existsByBusinessNumber(requestDto.businessNumber())) {
             throw new BusinessException(ErrorCode.BUSINESS_CODE_EXISTS);
         }
 
         Restaurant restaurant = RestaurantMapper.toRestaurant(user.getId(), requestDto);
         restaurantRepository.save(restaurant);
-
         // 이미지 업로드
         imageService.uploadImage(ImageCategory.restaurant, restaurant.getId(), restaurantImage);
-
         // 식당_카테고리 저장
         saveRestaurantCategory(requestDto, restaurant);
+
+        eventPublisher.publishEvent(new RestaurantCreateEvent(restaurant, user));
+    }
+
+    // 식당 상태 변경 (Admin)
+    @Transactional
+    public void approveRestaurant(User user, UUID restaurantId,  RestaurantApproveRequestDto requestDto) {
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new BusinessException(ErrorCode.NOT_ADMIN);
+        }
+
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+        restaurant.updateStatus(requestDto.approvalStatus());
     }
 
     // 식당 수정
     @Transactional
     public void editRestaurant(User user, RestaurantRequestDto requestDto, UUID restaurantId) {
-//        validateUser(user);
+        validateUser(user);
         Restaurant findRestaurant = restaurantRepository.findByIdAndOwnerIdAndDeletedAtIsNull(restaurantId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
 
@@ -76,7 +92,7 @@ public class RestaurantService {
     // 식당 삭제
     @Transactional
     public void deleteRestaurant(User user, UUID restaurantId) {
-//        validateUser(user);
+        validateUser(user);
         Restaurant findRestaurant = restaurantRepository.findByIdAndOwnerIdAndDeletedAtIsNull(restaurantId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
 
@@ -88,7 +104,7 @@ public class RestaurantService {
     // 식당 조회 (사장)
     @Transactional(readOnly = true)
     public List<RestaurantDetailResponseDto> getRestaurants(User user) {
-//        validateUser(user);
+        validateUser(user);
         List<Restaurant> OwnerRestaurantList = restaurantRepository.findAllByOwnerIdAndDeletedAtIsNull(user.getId());
 
         List<RestaurantDetailResponseDto> restaurantList = new ArrayList<>();
@@ -102,20 +118,18 @@ public class RestaurantService {
 
     // 리스트 조회 (필터 처리 :  1.거리순 2.별점순 3.이름 4.카테고리)
     @Transactional(readOnly = true)
-    public SliceListResponseDto getAllRestaurants(int page, int size, String sortBy, UUID category, String name, Double lat, Double lon) {
+    public SliceListResponseDto getAllRestaurants(int page, int size, String sortBy, UUID category, String name, Double lat, Double lon, Double distance) {
         Slice<RestaurantListResponseDto> restaurantList;
         // 거리 기준 정렬
         if ("distance".equalsIgnoreCase(sortBy)) {
-            // Bounding Box 계산 로직 (3km 반경내 식당 필터 후 거리 계산)
-            double distance = 3.0; // 3km 반경
-
+            // Bounding Box 계산 로직 (반경내 식당 필터 후 거리 계산, default = 3km)
             double R = 6371; // 지구 반지름(km)
 
-            // 위도, 경도 delta 계산 (3km 크기 위도, 경도 값)
+            // 위도, 경도 delta 계산
             double latDelta = Math.toDegrees(distance / R);
             double lonDelta = Math.toDegrees(distance / (R * Math.cos(Math.toRadians(lat))));
 
-            // 경계값 계산 (3km 반경 위도, 경도 값)
+            // 경계값 계산
             double minLat = lat - latDelta;
             double maxLat = lat + latDelta;
             double minLon = lon - lonDelta;
@@ -139,7 +153,7 @@ public class RestaurantService {
     // 상세 정보 조회
     @Transactional(readOnly = true)
     public RestaurantDetailResponseDto getRestaurantDetail(UUID restaurantId) {
-        Restaurant findRestaurant = restaurantRepository.findByIdAndDeletedAtIsNull(restaurantId)
+        Restaurant findRestaurant = restaurantRepository.findByIdAndDeletedAtIsNullAndApprovalStatus(restaurantId, ApprovalStatus.APPROVED)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
         return RestaurantMapper.toRestaurantDetailResponseDto(findRestaurant);
     }

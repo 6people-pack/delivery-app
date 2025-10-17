@@ -71,6 +71,10 @@ public class Restaurant extends BaseEntity {
 
     private int reviewCount;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ApprovalStatus approvalStatus;
+
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RestaurantCategory> restaurantCategories = new ArrayList<>();
 
@@ -94,6 +98,7 @@ public class Restaurant extends BaseEntity {
         this.totalRating = 0.0;
         this.reviewCount = 0;
         this.rating = 0.0;
+        this.approvalStatus = ApprovalStatus.PENDING;
     }
 
     public void editRestaurant(RestaurantRequestDto requestDto) {
@@ -131,5 +136,9 @@ public class Restaurant extends BaseEntity {
         } else {
             this.rating = Math.round((totalRating / reviewCount) * 10) / 10.0;
         }
+    }
+
+    public void updateStatus(ApprovalStatus approvalStatus) {
+        this.approvalStatus = approvalStatus;
     }
 }
