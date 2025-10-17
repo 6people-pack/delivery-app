@@ -1,8 +1,11 @@
 package com.sparta.delivery.inquiry.service;
 
 
+import com.sparta.delivery.comment.repository.CommentRepository;
 import com.sparta.delivery.global.exception.BusinessException;
 import com.sparta.delivery.global.exception.domain.ErrorCode;
+import com.sparta.delivery.global.unit.common.BaseResponse;
+import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.dto.InquiryAllGetResponseDto;
 import com.sparta.delivery.inquiry.dto.InquiryCreateRequestDto;
@@ -14,26 +17,24 @@ import com.sparta.delivery.inquiry.repository.InquiryRepository;
 import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.repository.UserRepository;
-import com.sparta.delivery.user.service.UserService;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InquiryService {
 
     private final InquiryRepository inquiryRepository;
-    //private final PreSignedProvider preSignedProvider;
-    //private final CommentQueryService commentQueryService;
-    //private final ImageQueryService imageQueryService;
+    private final CommentRepository commentRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepository userRepository;
 
@@ -42,9 +43,9 @@ public class InquiryService {
     @Transactional
     public void createNewInquiry(long userId, InquiryCreateRequestDto request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        Inquiry inquiry = InquiryMapper.toInquiry(request, user);
+        Inquiry inquiry = Inquiry.toInquiry(request, user);
         inquiryRepository.save(inquiry);
-        eventPublisher.publishEvent(new InquiryCreateEvent(inquiry));
+        eventPublisher.publishEvent(new InquiryCreateEvent(inquiry, user));
     }
 
 
@@ -60,10 +61,7 @@ public class InquiryService {
             nextCursor = content.get(content.size()-1).getId();
         }
         List<InquiryItem> inquiryItems = inquirySlice.stream().map(inquiry -> {
-
-            //int answerCount = commentQueryService.findCommentSize(inquiry.getId());
-            int answerCount = 0; //TODO 댓글 작업 필요
-
+            long answerCount = commentRepository.countByInquiry_Id(inquiry.getId());
             return InquiryMapper.fromInquiryItem(inquiry, answerCount);
         }).toList();
 
@@ -78,11 +76,12 @@ public class InquiryService {
         Inquiry inquiry = inquiryRepository.findByIdAndUser(inquiryId, userId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FIND_INQUIRY));
 
         //관리자도 아니고 자신이 쓴 문의글이 아니면 조회 불가
-        if (!user.getRole().equals(Role.ADMIN) && !inquiry.getUser().getId().equals(user.getId())) {
+        if (!user.getRole().equals(Role.ADMIN) && !inquiry.getUserId().equals(user.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
-
         return InquiryMapper.fromInquiry(inquiry);
 
     }
+
+
 }
