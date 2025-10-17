@@ -1,10 +1,13 @@
 package com.sparta.delivery.ai.service;
 
 import com.sparta.delivery.ai.dto.AiSimpleResponseDto;
+import com.sparta.delivery.ai.event.AiGenerateFailedEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 
 @Slf4j
@@ -21,17 +25,55 @@ public class AiApiService {
 
     private final RestTemplate restTemplate;
     private final AiService aiService;
+    private final ApplicationEventPublisher publisher;
 
-    public AiApiService(RestTemplateBuilder builder, AiService aiService) {
+    private final int MAX_RETRY = 3;
+
+    public AiApiService(RestTemplateBuilder builder, AiService aiService, ApplicationEventPublisher publisher) {
         this.restTemplate = builder.build();
         this.aiService = aiService;
+        this.publisher = publisher;
     }
 
     @Value("${gemini.api-key}")
     private String apikey;
 
-    //todo : 응답 안받았을때 대응 필요
-    public AiSimpleResponseDto getAnswerFromAi(String question) {
+
+    //todo : 응답 안받았을때 대응 필요 - 후에 @retry 사용
+    //todo : 다른 dto도 id를 UUID로 바꿈
+    //todo : error message 파싱 개선
+    public AiSimpleResponseDto generateAiAnswer(Long userId, String category, UUID categoryId, String question) {
+        AiSimpleResponseDto response = null;
+        try{
+            response =  getAnswerFromGemini(question);
+        }catch (Exception e){
+            int attempt = 0;
+            while(attempt < MAX_RETRY){
+                try{
+                    attempt++;
+                    int messageIndex = e.getMessage().lastIndexOf("message")+8;
+                    log.warn("AI 응답 실패 및 재시도 - userId : {}, category : {}, categoryId : {}, question : {}, attempt : {}, error: {}", userId, category, categoryId, question, attempt, e.getMessage().substring(messageIndex));
+                    response = getAnswerFromGemini(question);
+                    break;
+                }catch (Exception ex){
+                    if(attempt >=MAX_RETRY) {
+                        log.error("AI 재시도 최종 실패 - userId : {}, category : {}, categoryId : {}, question : {}, error: {}", userId, category, categoryId, question, e.getMessage());
+                        response = new AiSimpleResponseDto("AI 응답이 없습니다. 잠시 후 다시 시도해주세요.");
+                        publisher.publishEvent(new AiGenerateFailedEvent(userId, category, categoryId, question, attempt, ex.getClass().getSimpleName()));
+                    }
+                    try {
+                        Thread.sleep(2000);  //재시도 간격 2초
+                    }catch (InterruptedException exc){
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+        return response;
+    }
+
+    @NotNull
+    private AiSimpleResponseDto getAnswerFromGemini(String question) {
         //요청 url 만들기
         URI uri = UriComponentsBuilder
                 .fromUriString("https://generativelanguage.googleapis.com")
@@ -39,13 +81,15 @@ public class AiApiService {
                 .encode()
                 .build()
                 .toUri();
-        log.info("uri = " + uri);
+
+        //요청 만들기
         RequestEntity<String> requestEntity = RequestEntity
                 .post(uri)
                 .header("x-goog-api-key",apikey)
                 .header("Content-Type","application/json")
                 .body(fromQuestiontoJSON(question));
 
+        //요청 보내기
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
         log.info("AI API Status Code : " + responseEntity.getStatusCode());
         log.info("AI API Question : " + question);

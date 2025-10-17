@@ -29,8 +29,9 @@ public class AiApiController {
 
     //ai에게 질문 요청api, 원래 front가 있으면 이 api가 있는게 맞음
     @PostMapping
-    public BaseResponse<AiSimpleResponseDto> askQuestion (@RequestBody @Valid AiRequestDto requestDto) {
-        return BaseResponse.ok(aiApiService.getAnswerFromAi(requestDto.getQuestion()), BaseStatus.CREATED);
+    public BaseResponse<AiSimpleResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                          @RequestBody @Valid AiRequestDto requestDto) {
+        return BaseResponse.ok(aiApiService.generateAiAnswer(userDetails.getUser().getId(), requestDto.getCategory(), requestDto.getCategoryId(),requestDto.getQuestion()), BaseStatus.CREATED);
     }
 
     //ai가 답변한 내용 전체 조회
