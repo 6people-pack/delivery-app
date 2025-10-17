@@ -1,15 +1,14 @@
 package com.sparta.delivery.inquiry.domain;
 
 import com.sparta.delivery.global.unit.common.BaseEntity;
+import com.sparta.delivery.inquiry.dto.InquiryCreateRequestDto;
 import com.sparta.delivery.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -36,15 +35,22 @@ public class Inquiry extends BaseEntity {
     private String content;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User user;
+    private Long userId;
 
 
     @Builder
-    public Inquiry( String title, String content, User user) {
+    public Inquiry( String title, String content, Long user) {
         this.title = title;
         this.content = content;
-        this.user = user;
+        this.userId = user;
+    }
+
+    public static Inquiry toInquiry(InquiryCreateRequestDto inquiryCreateRequestDto, User user) {
+        return Inquiry.builder()
+            .title(inquiryCreateRequestDto.title())
+            .content(inquiryCreateRequestDto.content())
+            .user(user.getId())
+            .build();
     }
 
 

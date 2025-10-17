@@ -2,6 +2,7 @@ package com.sparta.delivery.discord.api;
 
 
 import com.sparta.delivery.discord.message.DiscordMessageConverter;
+import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.message.InquiryMessage;
 import com.sparta.delivery.restaurant.domain.Restaurant;
 import com.sparta.delivery.restaurant.message.RestaurantMessage;
@@ -21,25 +22,31 @@ public class DiscordService {
 
     private final JDA jda;
 
-    @Value("${discord.bot.channel}")
-    private String channelId;
+    @Value("${discord.bot.inquiryChannel}")
+    private String inquiryChannelId;
+
+    @Value("${discord.bot.restaurantChannel}")
+    private String restaurantChannelId;
+
+    @Value("${discord.bot.aiChannel}")
+    private String aiChannelId;
 
 
     // 사용자 문의 요청
-    public void InquirySendMessageToDiscord(User user, String title, String content) {
+    public void InquirySendMessageToDiscord(User user, Inquiry inquiry) {
         log.info("Inquiry Send Message To Discord");
-        TextChannel channel = jda.getTextChannelById(channelId);
+        TextChannel channel = jda.getTextChannelById(inquiryChannelId);
         if (channel == null) {
             log.info("Channel not found");
         }
-        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new InquiryMessage(user, title, content));
+        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new InquiryMessage(user, inquiry.getTitle(), inquiry.getContent()));
         channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
     }
 
     //식당 사장의 식당 등록 요청
     public void RestaurantOwnerSendMessageToDiscord(User user, Restaurant restaurant) {
-        log.info("Shop Owner Send Message To Discord");
-        TextChannel channel = jda.getTextChannelById(channelId);
+        log.info("Restaurant Owner Send Message To Discord");
+        TextChannel channel = jda.getTextChannelById(restaurantChannelId);
         MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new RestaurantMessage(user, restaurant));
         channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
 

@@ -7,12 +7,10 @@ import lombok.Getter;
 @Getter
 public class InquiryCreateEvent {
     private final User user;
-    private final String title;
-    private final String Content;
+    private final Inquiry inquiry;
 
-    public InquiryCreateEvent(Inquiry inquiry) {
-        this.user = inquiry.getUser();
-        this.title = inquiry.getTitle();
-        Content = inquiry.getContent();
+    public InquiryCreateEvent(Inquiry inquiry, User user) {
+        this.user = user;
+        this.inquiry = inquiry;
     }
 }

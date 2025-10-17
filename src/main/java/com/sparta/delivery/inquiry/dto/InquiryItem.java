@@ -9,7 +9,7 @@ import lombok.Builder;
 public record InquiryItem (
     UUID InquiryId,
     String title,
-    int answerCount,
+    long answerCount,
     LocalDateTime createTime
 
 ){}
