@@ -32,7 +32,7 @@ public class ReviewCommentController {
     @GetMapping
     public Page<CommentResponseDto> list(
             @PathVariable("reviewId") UUID reviewId,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         return service.listByReview(reviewId, pageable);
     }

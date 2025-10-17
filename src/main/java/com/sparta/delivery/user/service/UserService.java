@@ -8,7 +8,6 @@ import com.sparta.delivery.security.jwt.utils.JwtUtil;
 import com.sparta.delivery.user.domain.User;
 import com.sparta.delivery.user.dto.*;
 import com.sparta.delivery.user.repository.UserRepository;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -53,7 +52,7 @@ public class UserService {
 
         // 입력된 비밀번호, 저장된 비밀번호 비교
         if (!passwordEncoder.matches(dto.password(), findUser.getPassword())) {
-            throw new BusinessException(ErrorCode.LOGIN_USER_NOT_FOUND);  //404
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);  //404
         }
 
         // Token 발급
