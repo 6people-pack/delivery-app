@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 
@@ -49,17 +50,21 @@ public class AiApiService {
         }catch (Exception e){
             int attempt = 0;
             while(attempt < MAX_RETRY){
+                String errorMessage;
                 try{
                     attempt++;
-                    int messageIndex = e.getMessage().lastIndexOf("message")+8;
-                    log.warn("AI 응답 실패 및 재시도 - userId : {}, category : {}, categoryId : {}, question : {}, attempt : {}, error: {}", userId, category, categoryId, question, attempt, e.getMessage().substring(messageIndex));
+                    errorMessage = e.getMessage().substring(e.getMessage().lastIndexOf("message")+10);
+                    errorMessage = errorMessage.substring(0,errorMessage.indexOf("<EOL>"));
+                    log.warn("AI 응답 실패 및 재시도 - userId : {}, category : {}, categoryId : {}, question : {}, attempt : {}, error: {}", userId, category, categoryId, question, attempt, errorMessage);
                     response = getAnswerFromGemini(question);
                     break;
                 }catch (Exception ex){
                     if(attempt >=MAX_RETRY) {
-                        log.error("AI 재시도 최종 실패 - userId : {}, category : {}, categoryId : {}, question : {}, error: {}", userId, category, categoryId, question, e.getMessage());
+                        errorMessage = ex.getMessage().substring(ex.getMessage().lastIndexOf("message")+10);
+                        errorMessage = errorMessage.substring(0,errorMessage.indexOf("<EOL>"));
+                        log.error("AI 재시도 최종 실패 - userId : {}, category : {}, categoryId : {}, question : {}, occurredAt: {}, error: {}", userId, category, categoryId, question, LocalDateTime.now(), errorMessage);
                         response = new AiSimpleResponseDto("AI 응답이 없습니다. 잠시 후 다시 시도해주세요.");
-                        publisher.publishEvent(new AiGenerateFailedEvent(userId, category, categoryId, question, attempt, ex.getClass().getSimpleName()));
+                        publisher.publishEvent(new AiGenerateFailedEvent(userId, category, categoryId,  ex.getClass().getSimpleName(), errorMessage));
                     }
                     try {
                         Thread.sleep(2000);  //재시도 간격 2초
