@@ -17,7 +17,6 @@ import com.sparta.delivery.restaurant.domain.Restaurant;
 import com.sparta.delivery.restaurant.repository.RestaurantRepository;
 import com.sparta.delivery.user.domain.Role;
 import com.sparta.delivery.user.domain.User;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,14 +24,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
+
+    // 10분 뒤 주문 상태를 확인하기 위한 스케쥴러
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
@@ -42,9 +44,20 @@ public class OrderService {
 
     // 주문 생성
     @Transactional
-    public void createOrder(User user, @Valid CreateOrderRequestDto dto) {
+    public CreateOrderResponseDto createOrder(User user, CreateOrderRequestDto dto) {
         int menuPriceSum = 0;
         int menuDiscountPriceSum = 0;
+
+        // TODO 결재 테스트 후 삭제
+        // 유저의 가장 최근 주문 조회 후 결재 대기 상태면 그 주문의 아이디와 결재 금액 리턴
+        // 결재페이지에서 주문 중복 생성을 막기 위한 임시 코드
+        Optional<Order> recentOrderOpt = orderRepository.findTopByUserIdOrderByCreatedAtDesc(user.getId());
+        if (recentOrderOpt.isPresent()) {
+            Order recentOrder = recentOrderOpt.get();
+            if (recentOrder.getOrderStatus() == OrderStatus.PENDING) {
+                return new CreateOrderResponseDto(recentOrder.getId(), recentOrder.getTotalAmount());
+            }
+        }
 
         // 주문 상품
         // 사용자 장바구니 아이템 조회
@@ -90,7 +103,7 @@ public class OrderService {
         String orderNumber = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         LocalDateTime orderedAt = LocalDateTime.now();
 
-        orderRepository.save(Order.create(
+        Order newOrder = Order.create(
                 orderNumber,
                 dto.address(),
                 dto.addressDetail(),
@@ -104,12 +117,19 @@ public class OrderService {
                 dto.customerRequest(),
                 orderItems,
                 orderedAt
-        ));
+        );
+
+        orderRepository.save(newOrder);
         orderItemRepository.saveAll(orderItems);
         // 주문 생성 후 장바구니 비우기
-        cartItems.forEach(item -> item.delete(user.getId()));
-        cartItemRepository.saveAll(cartItems);
+//        cartItems.forEach(item -> item.delete(user.getId()));
+//        cartItemRepository.saveAll(cartItems);
+// TODO 결제 테스트 후 주석 해제
 
+        // 10분 뒤 아직도 결재 대기 상태면 취소 처리
+        scheduler.schedule(() -> handlePendingOrder(newOrder.getId()), 10, TimeUnit.MINUTES);
+
+        return new CreateOrderResponseDto(newOrder.getId(), totalAmount);
     }
 
     // 주문 조회
@@ -146,6 +166,7 @@ public class OrderService {
     }
 
     // 주문 상세(조회)
+    @Transactional(readOnly = true)
     public GetOrderDetailResponseDto getOrdersDetail(User user, UUID orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() ->
                 new BusinessException(ErrorCode.ORDER_NOT_FOUND));
@@ -186,6 +207,7 @@ public class OrderService {
     }
 
     // 가게 주문 현황 조회(점주)
+    @Transactional(readOnly = true)
     public Page<GetOrderDetailResponseDto> getOrdersOwner(User user, UUID restaurantId, Pageable pageable) {
         Restaurant findRestaurant = restaurantRepository.findById(restaurantId).orElseThrow(
                 () -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
@@ -241,20 +263,23 @@ public class OrderService {
         boolean isAdmin = user.getRole() == Role.ADMIN;
         boolean isOrder = user.getRole() == Role.CUSTOMER && order.getUserId().equals(user.getId());
 
-        if (!isAdmin && !isOrder) {
-            throw new BusinessException(ErrorCode.INVALID_ORDER_ACCESS);
-        }
-        if (order.getOrderStatus() == OrderStatus.REQUESTED) {
-            order.changeStatusCanceled();
+        // 취소 가능한 상태들
+        EnumSet<OrderStatus> cancellableStatus = EnumSet.of(OrderStatus.REQUESTED, OrderStatus.PENDING);
+
+        if (!isAdmin && !isOrder) { throw new BusinessException(ErrorCode.INVALID_ORDER_ACCESS); }
+
+        if (cancellableStatus.contains(order.getOrderStatus())) {
+            order.changeStatusCanceled("주문 수락 전 취소한 주문입니다.");
             orderRepository.save(order);
         } else {
             throw new BusinessException(ErrorCode.ORDER_CANNOT_CANCEL);
         }
+
     }
 
     // 주문 취소(점주)
     @Transactional
-    public void cancelOrderOwner(User user, @Valid CancelOrderOwnerRequestDto dto) {
+    public void cancelOrderOwner(User user, CancelOrderOwnerRequestDto dto) {
         Order order = orderRepository.findById(dto.orderId()).orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         // 추가 검증 필요, 주문이 사장의 가게 주문인지
         if (!(user.getRole().name().equals("ADMIN") || (user.getRole().name().equals("OWNER")))) {
@@ -264,30 +289,68 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    // 주문 상태 변경(점주)
+    // 주문 상태 변경, 고객은 PENDING → REQUESTED 만 가능
+    //               점주는 requested -> accepted ->  ~
     @Transactional
     public void updateOrderStatus(User user, UUID orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-        // 추가 검증 필요, 주문이 사장의 가게 주문인지
-        if (!(user.getRole().name().equals("ADMIN") || (user.getRole().name().equals("OWNER")))) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-        }
 
-        if (order.getOrderStatus() == OrderStatus.DELIVERED) {
-            throw new BusinessException(ErrorCode.OWNER_ORDER_CANNOT_CANCEL);
-        }
-        else if (order.getOrderStatus() == OrderStatus.REQUESTED) {
-            order.changeStatusAccepted();
-        }
-        else if (order.getOrderStatus() == OrderStatus.ACCEPTED) {
-            order.changeStatusDelivering();
+        OrderStatus currentStatus = order.getOrderStatus();
+        String role = user.getRole().name();
 
-            //바로 배달 완료 처리
-            order.changeStatusDelivered();
-        }
+        switch (role) {
+            case "CUSTOMER" -> {
+                if (currentStatus == OrderStatus.PENDING) {
+                    order.changeStatusRequested();
+                } else {
+                    throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+                }
+            }
 
+            case "OWNER" -> {
+                // 주문이 해당 점주의 가게에 속하는지 확인
+                Restaurant findRestaurant = restaurantRepository.findById(order.getRestaurantId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+
+                if (!findRestaurant.getOwnerId().equals(user.getId())) {
+                    throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+                }
+
+                switch (currentStatus) {
+                    case REQUESTED -> order.changeStatusAccepted();
+                    case ACCEPTED -> order.changeStatusDelivering();
+                    case DELIVERING -> order.changeStatusDelivered();
+                    default -> throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+                }
+            }
+
+            case "ADMIN" -> {
+                // 관리자는 거의 모든 상태를 강제 변경 가능
+                switch (currentStatus) {
+                    case PENDING -> order.changeStatusRequested();
+                    case REQUESTED -> order.changeStatusAccepted();
+                    case ACCEPTED -> order.changeStatusDelivering();
+                    case DELIVERING -> order.changeStatusDelivered();
+                    default -> throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+                }
+            }
+            default -> throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+
+        }
         orderRepository.save(order);
+
     }
 
+    // 주문 후 10분 뒤 실행될 메서드
+    @Transactional
+    protected void handlePendingOrder(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getOrderStatus() == OrderStatus.PENDING) {
+            order.changeStatusCanceled("결재를 진행하지 않아 취소되었습니다.");
+            orderRepository.save(order);
+        }
+    }
 
 }

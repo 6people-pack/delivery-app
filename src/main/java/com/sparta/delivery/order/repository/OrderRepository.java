@@ -22,4 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     Page<Order> findByUserId(Long id, Pageable pageable);
 
     Page<Order> findByRestaurantId(UUID restaurantId, Pageable pageable);
+
+    // 유저의 가장 최근 주문 조회, 결재페이지에서 주문 중복 생성을 막기 위한 임시 코드
+    Optional<Order> findTopByUserIdOrderByCreatedAtDesc(Long userId);
 }

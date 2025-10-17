@@ -2,10 +2,7 @@ package com.sparta.delivery.order.controller;
 
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
-import com.sparta.delivery.order.dto.CancelOrderOwnerRequestDto;
-import com.sparta.delivery.order.dto.GetOrderDetailResponseDto;
-import com.sparta.delivery.order.dto.GetOrderResponseDto;
-import com.sparta.delivery.order.dto.CreateOrderRequestDto;
+import com.sparta.delivery.order.dto.*;
 import com.sparta.delivery.order.service.OrderService;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
@@ -28,12 +25,11 @@ public class OrderController {
 
     // 주문 생성(= 결제하기 버튼 시)
     @PostMapping("/")
-    public BaseResponse<Void> createOrder(
+    public BaseResponse<CreateOrderResponseDto> createOrder(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid CreateOrderRequestDto dto) {
 
-        orderService.createOrder(userDetails.getUser(), dto);
-        return BaseResponse.ok(BaseStatus.CREATED);
+        return BaseResponse.ok(orderService.createOrder(userDetails.getUser(), dto), BaseStatus.CREATED);
     }
 
     // 전체 주문 조회(고객)
@@ -66,7 +62,7 @@ public class OrderController {
         return BaseResponse.ok(orderService.getOrdersOwner(userDetails.getUser(), restaurantId, pageable), BaseStatus.OK);
     }
 
-    // 주문 취소(고객), 수락 전이라면 취소 가능
+    // 주문 취소(고객), 수락 전이거나, 결재 취소 시
     @PatchMapping("/{orderId}/cancel")
     public BaseResponse<Void> cancelOrderCustomer(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -86,8 +82,9 @@ public class OrderController {
         return BaseResponse.ok(BaseStatus.OK);
     }
 
-    // 주문 상태 변경(점주), 주문 요청에 대해 수락, 배달, 완료 (배달하기 요청을 보내고 바로 완료 요청이 왔다고 가정하고 완료 처리)
-    @PatchMapping("/owner/{orderId}/status")
+    // 주문 상태 변경, 고객: pending -> requested)
+    //               점주: requested -> accepted -> ~
+    @PatchMapping("/{orderId}/status")
     public BaseResponse<Void> updateOrderStatus(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable("orderId") UUID orderId) {
