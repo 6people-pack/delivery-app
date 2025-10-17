@@ -32,6 +32,10 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
     // 식당 상세 조회
     Optional<Restaurant> findByIdAndDeletedAtIsNullAndApprovalStatus(UUID restaurantId, ApprovalStatus approvalStatus);
 
+    //
+    boolean existsByIdAndOwnerIdAndDeletedAtIsNull(UUID uuid, Long id);
+
+
 
     // 별점 또는 다른 기준(식당 내 필드)으로 정렬
     @Query(value = "SELECT " +
