@@ -19,11 +19,6 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/test") //스프링 시큐리티 인증 테스트
-    public String loginTest(){
-        return "login test";
-    }
-
     // 회원 가입
     @PostMapping("/signup")
     public BaseResponse<Void> signup(@RequestBody @Valid SignUpRequestDto signUpRequestDto) {

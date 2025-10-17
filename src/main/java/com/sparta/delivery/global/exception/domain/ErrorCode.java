@@ -21,10 +21,10 @@ public enum ErrorCode {
     MISMATCHED_IMAGE_COUNT(HttpStatus.BAD_REQUEST,"받아온 이미지 개수와 인덱스 개수가 맞지 않습니다." ),
     NO_USE_CATEGORY(HttpStatus.BAD_REQUEST, "해당 카테고리는 지원하지 않는 컨텐츠입니다."),
     BLACKLIST_TOKEN(HttpStatus.BAD_REQUEST, "블랙리스트 토큰으로 시도한 접근입니다."),
+        //비번 변경 시
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 비밀번호입니다."),
     SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "기존과 동일한 비밀번호입니다."),
 
-    //tosspay
         //tosspay
     ZERO_AMOUNT_PAYMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "0원 결제는 허용되지 않습니다."),
     INVALID_MENU_STATUS(HttpStatus.BAD_REQUEST, "판매 중인 메뉴가 아닙니다."),
@@ -35,8 +35,6 @@ public enum ErrorCode {
 
     // 401
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "인증이 필요한 요청입니다. 로그인 해주세요."),
-    // 비번 변경 시
-    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다. 다시 시도 해주세요."),
     ROLE_AUTHORIZATION_REQUIRED(HttpStatus.UNAUTHORIZED, "권한이 필요한 요청입니다."),
     NOT_OWNER(HttpStatus.UNAUTHORIZED,"해당 식당의 주인만이 이용 가능합니다." ),
     NOT_REVIEWER(HttpStatus.UNAUTHORIZED,"해당 리뷰의 작성자만이 이용 가능합니다." ),

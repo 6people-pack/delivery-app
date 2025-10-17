@@ -48,17 +48,6 @@ public class OrderService {
         int menuPriceSum = 0;
         int menuDiscountPriceSum = 0;
 
-        // TODO 결재 테스트 후 삭제
-        // 유저의 가장 최근 주문 조회 후 결재 대기 상태면 그 주문의 아이디와 결재 금액 리턴
-        // 결재페이지에서 주문 중복 생성을 막기 위한 임시 코드
-        Optional<Order> recentOrderOpt = orderRepository.findTopByUserIdOrderByCreatedAtDesc(user.getId());
-        if (recentOrderOpt.isPresent()) {
-            Order recentOrder = recentOrderOpt.get();
-            if (recentOrder.getOrderStatus() == OrderStatus.PENDING) {
-                return new CreateOrderResponseDto(recentOrder.getId(), recentOrder.getTotalAmount());
-            }
-        }
-
         // 주문 상품
         // 사용자 장바구니 아이템 조회
         List<CartItem> cartItems = cartItemRepository.findByUserId(user.getId());
@@ -122,9 +111,8 @@ public class OrderService {
         orderRepository.save(newOrder);
         orderItemRepository.saveAll(orderItems);
         // 주문 생성 후 장바구니 비우기
-//        cartItems.forEach(item -> item.delete(user.getId()));
-//        cartItemRepository.saveAll(cartItems);
-// TODO 결제 테스트 후 주석 해제
+        cartItems.forEach(item -> item.delete(user.getId()));
+        cartItemRepository.saveAll(cartItems);
 
         // 10분 뒤 아직도 결재 대기 상태면 취소 처리
         scheduler.schedule(() -> handlePendingOrder(newOrder.getId()), 10, TimeUnit.MINUTES);
