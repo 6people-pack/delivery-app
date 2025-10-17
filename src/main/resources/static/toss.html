@@ -1,155 +1,186 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Toss Payments – 최소 예시</title>
-  <script src="https://js.tosspayments.com/v1"></script>
-  <style>
-    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",Arial; margin:0; background:#f8fafc; }
-    .wrap { max-width: 480px; margin: 10vh auto; background:#fff; padding: 24px; border-radius: 14px; box-shadow: 0 8px 30px rgba(2,8,23,.08); }
-    h1 { margin: 0 0 8px; font-size: 20px; }
-    .row { display:flex; gap:10px; align-items:center; margin-top:12px; }
-    input { flex:1; padding:12px; border:1px solid #e2e8f0; border-radius:10px; font-size:16px; }
-    button { padding:12px 16px; border:0; border-radius:10px; background:#0ea5e9; color:#fff; font-weight:700; cursor:pointer; }
-    .msg { margin-top:12px; color:#475569; font-size:14px; }
-    pre { background:#0f172a; color:#e2e8f0; padding:10px; border-radius:10px; overflow:auto; }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Toss Payments – 최소 예시</title>
+    <script src="https://js.tosspayments.com/v1"></script>
+    <style>
+        body { font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",Arial; margin:0; background:#f8fafc; }
+        .wrap { max-width: 480px; margin: 10vh auto; background:#fff; padding: 24px; border-radius: 14px; box-shadow: 0 8px 30px rgba(2,8,23,.08); }
+        h1 { margin: 0 0 8px; font-size: 20px; }
+        .row { display:flex; gap:10px; align-items:center; margin-top:12px; }
+        .amount-display { flex:1; padding:12px; border:1px solid #e2e8f0; border-radius:10px; font-size:16px; background:#f1f5f9; text-align:right; }
+        button { padding:12px 16px; border:0; border-radius:10px; background:#0ea5e9; color:#fff; font-weight:700; cursor:pointer; }
+        .msg { margin-top:12px; color:#475569; font-size:14px; }
+        pre { background:#0f172a; color:#e2e8f0; padding:10px; border-radius:10px; overflow:auto; }
+    </style>
 </head>
 
 <body>
 <div class="wrap">
-  <h1>포인트 충전</h1>
-  <div class="row">
-    <input id="amount" type="number" min="100" step="100" placeholder="금액(원)" />
-    <button id="payBtn">결제하기</button>
-  </div>
-  <div class="msg" id="msg"></div>
-  <div id="result"></div>
+    <h1>포인트 충전</h1>
+    <div class="row">
+        <div id="amount" class="amount-display">0원</div>
+        <button id="payBtn">결제하기</button>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div id="result"></div>
 </div>
 
 <script>
-  // === 환경 설정 (요청대로 문서 데모 키 사용) ===
-  const clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
-  const backendConfirmEndpoint = '/api/payments/confirm';
-  const backendFailEndpoint = '/api/payments/fail';
+    const token = localStorage.getItem('accessToken');
 
-  // 공통 유틸
-  function $(id) { return document.getElementById(id); }
-  function generateOrderId() {
-    const ymd = new Date().toISOString().slice(0,10).replaceAll('-','');
-    const rnd = Math.random().toString(36).slice(2,10).toUpperCase();
-    return `ORDER-${ymd}-${rnd}`;
-  }
-  function pageUrl(params) {
-    // 예: http://localhost:8700/toss.html
-    const base = location.origin + location.pathname;
-    const qs = new URLSearchParams(params || {});
-    return qs.toString() ? `${base}?${qs}` : base;
-  }
-  function log(obj) {
-    $('result').innerHTML = `<pre>${JSON.stringify(obj, null, 2)}</pre>`;
-  }
+    const clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
+    const backendConfirmEndpoint = '/api/payments/confirm';
+    const backendFailEndpoint = '/api/payments/fail';
 
-  // DOMContentLoaded로 감싸서 요소가 null이 되는 문제 방지
-  document.addEventListener('DOMContentLoaded', () => {
-    const payBtn = $('payBtn');
-    const amountEl = $('amount');
-    if (!payBtn)  { console.error('payBtn 요소를 찾을 수 없습니다.'); return; }
-    if (!amountEl){ console.error('amount 요소를 찾을 수 없습니다.'); return; }
+    const orderTotalEndpoint = '/api/orders/';
+    const dto = {
+        address: '서울시 강남구 테헤란로 123',
+        addressDetail: '101호',
+        customerRequest: '부재 시 문 앞에 놓아주세요'
+    };
 
-    const tossPayments = TossPayments(clientKey);
+    function $(id) { return document.getElementById(id); }
 
-    payBtn.addEventListener('click', async () => {
-      const amount = Number(amountEl.value || 0);
-      if (!amount || amount < 100) {
-        alert('100원 이상 입력하세요.');
-        amountEl.focus();
-        return;
-      }
+    function pageUrl(params) {
+        // 예: http://localhost:8700/toss.html
+        const base = location.origin + location.pathname;
+        const qs = new URLSearchParams(params || {});
+        return qs.toString() ? `${base}?${qs}` : base;
+    }
+    function log(obj) {
+        $('result').innerHTML = `<pre>${JSON.stringify(obj, null, 2)}</pre>`;
+    }
 
-      const orderId = generateOrderId();
-      $('msg').textContent = `주문번호: ${orderId} / 금액: ${amount}원`;
+    // DOMContentLoaded로 감싸서 요소가 null이 되는 문제 방지
+    document.addEventListener('DOMContentLoaded', () => {
+        const payBtn = $('payBtn');
+        const amountEl = $('amount');
+        if (!payBtn)  { console.error('payBtn 요소를 찾을 수 없습니다.'); return; }
+        if (!amountEl){ console.error('amount 요소를 찾을 수 없습니다.'); return; }
 
-      try {
-        // 환경에 따라 'CARD' 또는 '카드' 모두 시도
-        try {
-          await tossPayments.requestPayment('CARD', {
-            amount,
-            orderId,
-            orderName: '포인트 충전',
-            customerName: '사용자',
-            successUrl: 'http://localhost:8080/toss.html?flow=success',
-            failUrl: 'http://localhost:8080/toss.html?flow=fail'
-          });
-        } catch (e1) {
-          await tossPayments.requestPayment('카드', {
-            amount,
-            orderId,
-            orderName: '포인트 충전',
-            customerName: '사용자',
-            successUrl: pageUrl({ flow: 'success' }),
-            failUrl: pageUrl({ flow: 'fail' })
-          });
-        }
-      } catch (err) {
-        // 여기 찍히는 code/message로 원인 진단 가능
-        log({ step: 'requestPayment-catch', code: err?.code, message: err?.message });
-        alert(err?.message || '결제가 취소되었거나 오류가 발생했습니다.');
-      }
-    });
+        const tossPayments = TossPayments(clientKey);
 
-    // 성공/실패 리다이렉트 처리
-    (async function handleRedirect() {
-      const qs = new URLSearchParams(location.search);
-      const flow = qs.get('flow');
-      if (!flow) return;
+        // 컨트롤러 호출, 금액 가져오기
+        (async () => {
+            try {
+                const res = await fetch(orderTotalEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `${token}`
+                    },
+                    body: JSON.stringify(dto)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('order response:', data); // ⚡ 확인용
+                    if (data && data.data && data.data.totalAmount != null) {
+                        amountEl.textContent = `${data.data.totalAmount}원`; // 주문 생성 컨트롤러에서 반환된 결재 금액
+                        $('msg').textContent = `현재 주문 금액: ${data.data.totalAmount}원`;
+                        orderIdFromServer = data.data.orderId; // 컨트롤러에서 반환된 주문ID
+                    }
+                }
+            } catch (e) {
+                console.warn('order total fetch error:', e);
+            }
+        })();
 
-      const paymentKey = qs.get('paymentKey');
-      const orderId = qs.get('orderId');
-      const amount = Number(qs.get('amount')||0);
+        payBtn.addEventListener('click', async () => {
+            // div에서 숫자만 추출
+            const amount = Number(amountEl.textContent.replace('원','').trim());
+            if (!amount || amount < 100) {
+                alert('100원 이상 입력하세요.');
+                return;
+            }
 
-      if (flow === 'fail') {
-        const code = qs.get('code');
-        const message = qs.get('message');
-        $('msg').textContent = '결제 실패';
-        log({ step: 'fail', code, message, orderId, amount });
+            const orderId = orderIdFromServer;
+            $('msg').textContent = `주문번호: ${orderId} / 금액: ${amount}원`;
 
-         // 실패 로그 서버로 전송 (한 번만)
-        try {
-            await fetch(backendFailEndpoint, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId, amount, code, message })
-             });
-           } catch (e) {
-             console.warn('fail log send error:', e);
-        }
-
-        return;
-      }
-
-      $('msg').textContent = '승인 요청 중...';
-      try {
-        const res = await fetch(backendConfirmEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentKey, orderId, amount })
+            try {
+                try {
+                    await tossPayments.requestPayment('CARD', {
+                        amount,
+                        orderId,
+                        orderName: '포인트 충전',
+                        customerName: '사용자',
+                        successUrl: pageUrl({ flow:'success', orderId, amount }),
+                        failUrl: pageUrl({ flow:'fail', orderId, amount })
+                    });
+                } catch (e1) {
+                    await tossPayments.requestPayment('카드', {
+                        amount,
+                        orderId,
+                        orderName: '포인트 충전',
+                        customerName: '사용자',
+                        successUrl: pageUrl({ flow:'success', orderId, amount }),
+                        failUrl: pageUrl({ flow:'fail', orderId, amount })
+                    });
+                }
+            } catch (err) {
+                // 여기 찍히는 code/message로 원인 진단 가능
+                log({ step: 'requestPayment-catch', code: err?.code, message: err?.message });
+                alert(err?.message || '결제가 취소되었거나 오류가 발생했습니다.');
+            }
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          $('msg').textContent = `승인 실패 (HTTP ${res.status})`;
-          log({ step: 'confirm-fail', status: res.status, data });
-          return;
-        }
-        $('msg').textContent = '승인 성공';
-        log({ step: 'confirm-ok', data });
-      } catch (e) {
-        $('msg').textContent = '네트워크 오류';
-        log({ step: 'confirm-error', message: e?.message || String(e) });
-      }
-    })();
-  });
+
+        // 성공/실패 리다이렉트 처리
+        (async function handleRedirect() {
+            const qs = new URLSearchParams(location.search);
+            const flow = qs.get('flow');
+            if (!flow) return;
+
+            const paymentKey = qs.get('paymentKey');
+            const orderId = qs.get('orderId');
+            const amount = Number(qs.get('amount')||0);
+
+            if (flow === 'fail') {
+                const code = qs.get('code');
+                const message = qs.get('message');
+                $('msg').textContent = '결제 실패';
+                log({ step: 'fail', code, message, orderId, amount });
+
+                try {
+                    await fetch(backendFailEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `${token}`
+                        },
+                        body: JSON.stringify({ orderId, amount, code, message })
+                    });
+                } catch (e) {
+                    console.warn('fail log send error:', e);
+                }
+                return;
+            }
+
+            $('msg').textContent = '승인 요청 중...';
+            try {
+                const res = await fetch(backendConfirmEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `${token}`
+                    },
+                    body: JSON.stringify({ paymentKey, orderId, amount })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    $('msg').textContent = `승인 실패 (HTTP ${res.status})`;
+                    log({ step: 'confirm-fail', status: res.status, data });
+                    return;
+                }
+                $('msg').textContent = '승인 성공';
+                log({ step: 'confirm-ok', data });
+            } catch (e) {
+                $('msg').textContent = '네트워크 오류';
+                log({ step: 'confirm-error', message: e?.message || String(e) });
+            }
+        })();
+    });
 </script>
 </body>
 </html>

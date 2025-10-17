@@ -42,7 +42,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-
             if (!res.ok) {
                 msg.textContent = '로그인 실패 (이메일 또는 비밀번호를 확인하세요)';
                 return;
