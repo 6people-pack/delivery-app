@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 
 @Getter
 public class AiResponseDto {
-    private String id;
+    private final String id;
 
-    private String question;
+    private final String question;
 
-    private String answer;
+    private final String answer;
 
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
 
 //    private String createdBy;
 

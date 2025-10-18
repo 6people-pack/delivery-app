@@ -23,7 +23,7 @@ public class AiPromptService {
     //Ai api 요청 부분과 작성부분을 분리하는 게 좋음(단일 책임 원칙, 같은 클래스 내에선 getAnswerFromAi()의 트랜잭션이 실행 불가)
     public AiSimpleResponseDto GetAiWithKeywords(Long userId, AiKeywordsRequestDto requestDto) {
         ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
-        UUID categoryId = UUID.fromString(requestDto.getCategoryId());
+        UUID categoryId = requestDto.getCategoryId();
         categoryCheck.checkAuthority(userId, imageCategory, categoryId);
         if(imageCategory.equals(ImageCategory.restaurant)) {
             RestaurantKeywords keywords = (RestaurantKeywords) requestDto.getKeywords();
@@ -31,14 +31,14 @@ public class AiPromptService {
                     "내 음식점의 대표 메뉴는 " + keywords.mainDish() + " 야. " +
                     "내 음식점의 장점은 " + keywords.advantage() + " 이지. " +
                     keywords.highlight() + "한다는 점을 중점으로 이 음식점을 홍보하기 위한 한줄 설명 문구를 만들어줘";
-            return aiApiService.getAnswerFromAi(question);
+            return aiApiService.generateAiAnswer(userId, requestDto.getCategory(), requestDto.getCategoryId(), question);
         } else if (ImageCategory.valueOf(requestDto.getCategory()).equals(ImageCategory.menu)) {
             MenuKeywords keywords = (MenuKeywords) requestDto.getKeywords();
             String question = "나는 음식점 사장이야. 이 메뉴의 이름은 " + keywords.name() + " 이고,  " +
                     "음식 종류는 " + keywords.category() + " 이고. " +
                     "주재료는 " + keywords.mainIngredient() + " 이야, " +
                     keywords.highlight() + "한다는 점을 중점으로 이 음식점을 홍보하기 위한 한줄 설명 문구를 만들어줘";
-            return aiApiService.getAnswerFromAi(question);
+            return aiApiService.generateAiAnswer(userId, requestDto.getCategory(), requestDto.getCategoryId(), question);
         } else {
             throw new BusinessException(ErrorCode.NO_USE_CATEGORY);
         }

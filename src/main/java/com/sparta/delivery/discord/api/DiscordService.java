@@ -5,6 +5,7 @@ import com.sparta.delivery.discord.message.DiscordMessageConverter;
 import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.message.InquiryMessage;
 import com.sparta.delivery.user.domain.User;
+import com.sparta.delivery.ai.message.AiFailMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -47,6 +48,13 @@ public class DiscordService {
 //        TextChannel channel = jda.getTextChannelById(channelId);
 //        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new ShopOwnerMessage(user, shopName,roadAddress, deTailAddress));
 //        channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
+
+    public void AiFailSendMessageToDiscord(Long userId, String category, String categoryId, String reason, String errorMessage) {
+        log.info("AI Failed Send Message To Discord");
+        TextChannel channel = jda.getTextChannelById(aiChannelId);
+        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new AiFailMessage(userId, category, categoryId, reason,errorMessage));
+        channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
+    }
 
 }
 
