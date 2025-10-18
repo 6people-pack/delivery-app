@@ -5,6 +5,7 @@ import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.image.dto.*;
 import com.sparta.delivery.image.service.ImageService;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,14 +24,14 @@ public class ImageController {
     //해당 카테고리의 이미지가 없을시 기본 이미지 반환
     @GetMapping("/all/{category}")
     public BaseResponse<ImageMultiResponseDto> getAllImage(@PathVariable String category,
-                                                           @RequestBody ImageMultiRequestDto requestDto) {
-        return BaseResponse.ok(imageService.getAllImage(category, requestDto.getCategoryid()), BaseStatus.OK);
+                                                           @Valid @RequestBody ImageMultiRequestDto requestDto) {
+        return BaseResponse.ok(imageService.getAllImage(category, requestDto.categoryId()), BaseStatus.OK);
     }
     //이미지 다건 수정
     @PutMapping("/all")
     public BaseResponse<ImageMultiResponseDto> updateAllImage(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                               @RequestPart("files") List<MultipartFile> files,
-                                                              @RequestPart("request") ImageUpdateRequestDto request) {
+                                                              @Valid @RequestPart("request") ImageUpdateRequestDto request) {
         return BaseResponse.ok(imageService.updateAllImage(userDetails.getUser().getId(), request, files), BaseStatus.OK);
     }
 }

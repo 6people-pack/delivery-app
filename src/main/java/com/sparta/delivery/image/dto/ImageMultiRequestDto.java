@@ -1,8 +1,9 @@
 package com.sparta.delivery.image.dto;
 
-import lombok.Getter;
+import jakarta.validation.constraints.NotNull;
 
-@Getter
-public class ImageMultiRequestDto {
-    private String categoryid;
+import java.util.UUID;
+
+public record ImageMultiRequestDto(
+        @NotNull UUID categoryId) {
 }
