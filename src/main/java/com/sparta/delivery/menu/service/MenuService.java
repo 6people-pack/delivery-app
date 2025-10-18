@@ -40,7 +40,7 @@ public class MenuService {
 //        Restaurant restaurantRef = em.getReference(Restaurant.class, req.restaurantId());
 
         // 해당 사용자가 식당 주인인지 검증
-        if (restaurantRepository.existsByIdAndOwnerIdAndDeletedAtIsNull(req.restaurantId(), user.getId())) throw new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND);
+        if (!restaurantRepository.existsByIdAndOwnerIdAndDeletedAtIsNull(req.restaurantId(), user.getId())) throw new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND);
 
         Menu menu = menuMapper.toEntity(req, req.restaurantId());
         Menu saved = menuRepository.save(menu);
