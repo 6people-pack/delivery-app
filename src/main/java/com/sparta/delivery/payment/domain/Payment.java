@@ -29,11 +29,18 @@ public class Payment extends BaseEntity {
     private UUID id;
 
     @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false)
+    private String userName;
+
+    @Column(nullable = false)
+    private UUID orderId;
+
+    @Column(nullable = false)
     private Long amount;
 
     private String paymentKey;
-
-    //TODO order, user 연관 필요 (프론트 코드 작성 이슈로 냅둠)
 
 
     @Column(nullable = false, length = 1000)
@@ -45,7 +52,10 @@ public class Payment extends BaseEntity {
 
 
     @Builder
-    public Payment(Long amount, String paymentKey, String payStatusMessage, String method, String provider) {
+    public Payment(Long userId, String userName, UUID orderId, Long amount, String paymentKey, String payStatusMessage, String method, String provider) {
+        this.userId = userId;
+        this.userName = userName;
+        this.orderId = orderId;
         this.amount = amount;
         this.paymentKey = paymentKey;
         this.payStatusMessage = payStatusMessage;

@@ -24,7 +24,6 @@ public class Order extends BaseEntity {
     @Column(name = "order_id", columnDefinition = "uuid")
     private UUID id;
 
-
     @Column(name = "order_number", length = 30, nullable = false, unique = true)
     private String orderNumber;
 
@@ -63,19 +62,22 @@ public class Order extends BaseEntity {
     private String customerRequest;
 
     @Column(name = "ordered_at")
-    private LocalDateTime orderedAt;
+    private LocalDateTime orderedAt; // 주문 생성 시각
+
+    @Column(name = "requested_at")
+    private LocalDateTime requestedAt; // 주문 요청 시각(결재 완료 시각과 동일)
 
     @Column(name = "accepted_at")
-    private LocalDateTime acceptedAt;
+    private LocalDateTime acceptedAt; // 주문 수락 시각
 
     @Column(name = "delivering_at")
-    private LocalDateTime deliveringAt;
+    private LocalDateTime deliveringAt; // 배달 시작 시각
 
     @Column(name = "delivered_at")
-    private LocalDateTime deliveredAt;
+    private LocalDateTime deliveredAt; // 배달 완료 시각
 
     @Column(name = "canceled_at")
-    private LocalDateTime canceledAt;
+    private LocalDateTime canceledAt; // 주문 취소 시각
 
     @Column(name = "cancel_message", columnDefinition = "TEXT")
     private String cancelMessage;
@@ -101,7 +103,7 @@ public class Order extends BaseEntity {
     ) {
         Order order = new Order();
         order.orderNumber = orderNumber;
-        order.orderStatus = OrderStatus.REQUESTED; // 초기 상태
+        order.orderStatus = OrderStatus.PENDING; // 결재 대기 상태
         order.address = address;
         order.addressDetail = addressDetail;
         order.userId = userId;
@@ -117,26 +119,31 @@ public class Order extends BaseEntity {
         return order;
     }
 
+    // 주문 요청 시(결재 승인과 동시에 요청)
+    public void changeStatusRequested(){
+        this.requestedAt = LocalDateTime.now();
+        this.orderStatus = OrderStatus.REQUESTED;
+    }
+
+    // 주문 수락 시
     public void changeStatusAccepted() {
         this.acceptedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.ACCEPTED;
     }
 
+    // 배달 시작 시
     public void changeStatusDelivering(){
         this.deliveringAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.DELIVERING;
     }
 
+    // 배달 완료 시
     public void changeStatusDelivered(){
         this.deliveredAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.DELIVERED;
     }
 
-    public void changeStatusCanceled() {
-        this.canceledAt = LocalDateTime.now();
-        this.orderStatus = OrderStatus.CANCELED;
-    }
-
+    // 점주 취소 시, 메세지
     public void changeStatusCanceled(String  cancelMessage) {
         this.canceledAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.CANCELED;

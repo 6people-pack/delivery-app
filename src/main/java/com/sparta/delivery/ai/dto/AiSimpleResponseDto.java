@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class AiSimpleResponseDto {
-    private String answer;
+    private final String answer;
 
     public AiSimpleResponseDto(String answer) {
         this.answer = answer;

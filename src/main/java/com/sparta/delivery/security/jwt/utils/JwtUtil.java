@@ -55,7 +55,7 @@ public class JwtUtil {
                         .compact();
     }
 
-    // 리프레시 토큰 생성, 만료 시간이 다르고 만료 시간을 같이 반환(온리쿠키에 추가하기 위해)
+    // 리프레시 토큰 생성, 만료 시간이 다르고 만료 시간을 같이 반환(httpOnly쿠키에 추가하기 위해)
     public RefreshTokenResponseDto issueRefreshToken(String email) {
         Date date = new Date();
         Date exp = new Date(date.getTime() + REFRESH_TOKEN_TIME);
