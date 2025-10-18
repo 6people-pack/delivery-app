@@ -34,18 +34,18 @@
 
 ### 🧰 기술 스택
 
-| 구분 | 사용 기술 |
-|------|------------|
+| 구분 | 사용 기술                                       |
+|------|---------------------------------------------|
 | **Backend** | Spring Boot(3.4.4), Spring Data JPA, QueryDSL |
-| **Infra** | AWS EC2, AWS S3, GitHub Actions, DockerHub |
-| **Integration & Resilience** | OpenFeign,Resilience4j |
-| **Database** | PostgreSQL (AWS RDS) |
-| **Security** | Spring Security, JWT 인증 |
-| **Payment** | Toss Payments |
-| **AI Integration** | Gemini API, Ollama |
-| **CI/CD** | GitHub Actions + DockerHub + AWS 자동 배포 파이프라인 |
-| **API Test** | Postman |
-| **Etc.** | Gradle, Lombok, RESTful API |
+| **Infra** | AWS EC2, AWS S3, GitHub Actions             |
+| **Integration & Resilience** | OpenFeign,Resilience4j                      |
+| **Database** | PostgreSQL (AWS RDS)                        |
+| **Security** | Spring Security, JWT 인증                     |
+| **Payment** | Toss Payments                               |
+| **AI Integration** | Gemini API, Ollama                          |
+| **CI/CD** | GitHub Actions +  AWS 자동 배포 파이프라인           |
+| **API Test** | Postman                                     |
+| **Etc.** | Gradle, Lombok, RESTful API                 |
 
 ---
 
@@ -224,17 +224,17 @@ curl http://localhost:11434/api/generate -d "{ \"model\": \"qwen2.5:1.5b\", \"pr
 
 ## ⚡ 핵심 기술 요약 (Core Implementation Highlights)
 
-| 구분 | 핵심 기술 |
-|------|------------|
-| 💬 **AI (Gemini)** | 음식점의 설명문을 자동 생성하는 기능으로 사용. 입력된 음식점 정보 기반으로 자연어 문장 생성 |
-| 🤖 **AI (Ollama)** | 고객센터 문의에 대해 로컬 LLM을 활용한 AI 자동 답변 기능 구현 |
-| 🖼️ **이미지 관리 (AWS S3)** | 이미지 업로드·수정·삭제 로직과 함께 버킷 내 경로 구조화 및 다중 삭제 API 구현 |
-| 🔐 **보안 (Spring Security, JWT)** | 사용자 권한(Role) 기반 접근 제어 및 Access/Refresh Token 인증 흐름 구성 |
-| 💳 **결제 (Toss Payments)** | 토스페이 결제 API 연동 및 주문 상태 트랜잭션 처리 |
-| 💬 **고객센터 (Discord Webhook)** | 문의 및 주문 관련 알림을 Discord 채널로 자동 전송 |
-| 🔗 **외부 연동 (OpenFeign + Resilience4j)** | 외부 API 호출 시 FeignClient 기반 통신 및 CircuitBreaker 적용으로 장애 복원성 확보 |
-| 🧩 **도메인 설계 (DDD 기반 구조)** | domain/global/infra 계층 분리, 도메인 단위 Repository & Service 구성 |
-| 🚀 **CI/CD (GitHub Actions + DockerHub + AWS)** | main 브랜치 푸시 시 자동 빌드·배포 파이프라인 구현 |
+| 구분                                            | 핵심 기술 |
+|-----------------------------------------------|------------|
+| 💬 **AI (Gemini)**                            | 음식점의 설명문을 자동 생성하는 기능으로 사용. 입력된 음식점 정보 기반으로 자연어 문장 생성 |
+| 🤖 **AI (Ollama)**                            | 고객센터 문의에 대해 로컬 LLM을 활용한 AI 자동 답변 기능 구현 |
+| 🖼️ **이미지 관리 (AWS S3)**                       | 이미지 업로드·수정·삭제 로직과 함께 버킷 내 경로 구조화 및 다중 삭제 API 구현 |
+| 🔐 **보안 (Spring Security, JWT)**              | 사용자 권한(Role) 기반 접근 제어 및 Access/Refresh Token 인증 흐름 구성 |
+| 💳 **결제 (Toss Payments)**                     | 토스페이 결제 API 연동 및 주문 상태 트랜잭션 처리 |
+| 💬 **고객센터 (Discord Webhook)**                 | 문의 및 주문 관련 알림을 Discord 채널로 자동 전송 |
+| 🔗 **외부 연동 (OpenFeign + Resilience4j)**       | 외부 API 호출 시 FeignClient 기반 통신 및 CircuitBreaker 적용으로 장애 복원성 확보 |
+| 🧩 **도메인 설계 (DDD 기반 구조)**                     | domain/global/infra 계층 분리, 도메인 단위 Repository & Service 구성 |
+| 🚀 **CI/CD (GitHub Actions + AWS)**           | main 브랜치 푸시 시 자동 빌드·배포 파이프라인 구현 |
 
 ---
 
