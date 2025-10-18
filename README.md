@@ -72,7 +72,6 @@ global
 ├── config
 ├── exception
 ├── unit
-┃   ┣ category
 ┃   ┣ common
 ┃   ┣ utils
 ```
@@ -110,14 +109,14 @@ global
 
 ### ☁️ 시스템 아키텍처
 
-<p align="center">
-  <img src="docs/ERD.png" width="800px" alt="Architecture 이미지"/>
+<p style="text-align:center;">
+  <img src="docs/Architecture.png" style="width:70%; max-width:700px;" alt="Architecture 이미지"/>
 </p>
 
 ### 🗂️ ERD
 
-<p align="center">
-  <img src="./docs/Architecture.png" width="900px" alt="ERD 이미지"/>
+<p style="text-align:center;">
+  <img src="./docs/ERD.png" style="width:70%; max-width:700px;" alt="ERD 이미지"/>
 </p>
 
 ---
@@ -229,6 +228,6 @@ AI 설명문구 생성을 위해 **Ollama**를 로컬 환경에 설치해야 합
 
 ---
 
-<p align="center">
+<p style="text-align:center;">
   <b>🍽️ 오늘의 밥상 — 주문부터 결제, 리뷰까지 한 번에!</b>
 </p>
