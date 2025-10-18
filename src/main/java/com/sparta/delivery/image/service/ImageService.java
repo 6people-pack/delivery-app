@@ -73,6 +73,9 @@ public class ImageService {
         if(requestDto.update().size() + requestDto.create().size() > MAX_IMAGE_COUNT)
             throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
 
+        if(imageRepository.countByCategoryAndCategoryId(imageCategory, categoryId)-requestDto.delete().size()!=requestDto.update().size())
+            throw new BusinessException(ErrorCode.ORINIAL_IMAGE_COUNT_MISMATCH);
+
         //이미지 삭제
         deleteImages(requestDto.delete());
 
