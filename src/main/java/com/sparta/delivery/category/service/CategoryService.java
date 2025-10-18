@@ -29,7 +29,7 @@ public class CategoryService {
     @Transactional
     public void createCategory(User user, CategoryRequestDto requestDto) {
         validateUser(user);
-        if (categoryRepository.existsByName(requestDto.name())) {
+        if (categoryRepository.existsByNameAndDeletedAtNull(requestDto.name())) {
             throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
         Category category = CategoryMapper.toCategory(requestDto);
@@ -43,7 +43,7 @@ public class CategoryService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        if (categoryRepository.existsByNameAndIdNot(requestDto.name(), categoryId)) {
+        if (categoryRepository.existsByNameAndIdNotAndDeletedAtNull(requestDto.name(), categoryId)) {
             throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
 

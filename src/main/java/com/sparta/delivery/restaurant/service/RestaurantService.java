@@ -182,7 +182,7 @@ public class RestaurantService {
     private void saveRestaurantCategory(RestaurantRequestDto requestDto, Restaurant findRestaurant) {
         ArrayList<RestaurantCategory> allCategories = new ArrayList<>();
         for (UUID category : requestDto.categories()) {
-            if (!categoryRepository.existsById(category)) throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+            if (!categoryRepository.existsByIdAndDeletedAtIsNull(category)) throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
             allCategories.add(RestaurantCategoryMapper.toRestaurantCategory(findRestaurant, category));
         }
         restaurantCategoryRepository.saveAll(allCategories);
