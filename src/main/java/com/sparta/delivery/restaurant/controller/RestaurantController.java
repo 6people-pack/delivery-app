@@ -4,6 +4,7 @@ import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.restaurant.domain.SortRestaurant;
 import com.sparta.delivery.restaurant.dto.RatingRequestDto;
+import com.sparta.delivery.restaurant.dto.RestaurantApproveRequestDto;
 import com.sparta.delivery.restaurant.dto.RestaurantRequestDto;
 import com.sparta.delivery.restaurant.service.RestaurantService;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
@@ -32,6 +33,16 @@ public class RestaurantController {
                                             @Valid @RequestPart(value = "restaurantInfo") RestaurantRequestDto requestDto) {
         restaurantService.createRestaurant(userDetails.getUser(), requestDto, restaurantImage);
         return BaseResponse.ok(BaseStatus.CREATED);
+    }
+
+    // 식당 상태 변경 (Admin)
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/restaurants/{restaurantId}/approve")
+    public BaseResponse<?> approveRestaurant(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                             @PathVariable UUID restaurantId,
+                                             @Valid @RequestBody RestaurantApproveRequestDto requestDto) {
+        restaurantService.approveRestaurant(userDetails.getUser(), restaurantId, requestDto);
+        return BaseResponse.ok(BaseStatus.OK);
     }
 
     // 식당 수정
@@ -68,9 +79,10 @@ public class RestaurantController {
                                              @RequestParam(defaultValue = "rating", required = false) SortRestaurant sortBy,
                                              @RequestParam(value = "category", required = false) UUID category,
                                              @RequestParam(value = "name", required = false) String name,
-                                             @RequestParam(value = "lat") Double lat,
-                                             @RequestParam(value = "lon") Double lon) {
-        return BaseResponse.ok(restaurantService.getAllRestaurants(page, size, sortBy.toString(), category, name, lat, lon), BaseStatus.OK);
+                                             @RequestParam(value = "lat", defaultValue = "37.5759") Double lat,
+                                             @RequestParam(value = "lon", defaultValue = "126.9769") Double lon,
+                                             @RequestParam(value = "distance", defaultValue = "3.0") Double distance) {
+        return BaseResponse.ok(restaurantService.getAllRestaurants(page, size, sortBy.toString(), category, name, lat, lon, distance), BaseStatus.OK);
     }
 
     // 식당 상세 조회

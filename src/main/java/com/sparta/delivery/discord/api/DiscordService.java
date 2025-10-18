@@ -4,7 +4,10 @@ package com.sparta.delivery.discord.api;
 import com.sparta.delivery.discord.message.DiscordMessageConverter;
 import com.sparta.delivery.inquiry.domain.Inquiry;
 import com.sparta.delivery.inquiry.message.InquiryMessage;
+import com.sparta.delivery.restaurant.domain.Restaurant;
+import com.sparta.delivery.restaurant.message.RestaurantMessage;
 import com.sparta.delivery.user.domain.User;
+import com.sparta.delivery.ai.message.AiFailMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -40,13 +43,21 @@ public class DiscordService {
         MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new InquiryMessage(user, inquiry.getTitle(), inquiry.getContent()));
         channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
     }
-// TODO 식당이 아직 없음
-//    //식당 사장의 식당 등록 요청
-//    public void ShopOwnerSendMessageToDiscord(User user, String shopName, String roadAddress, String deTailAddress) {
-//        log.info("Shop Owner Send Message To Discord");
-//        TextChannel channel = jda.getTextChannelById(channelId);
-//        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new ShopOwnerMessage(user, shopName,roadAddress, deTailAddress));
-//        channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
+
+    //식당 사장의 식당 등록 요청
+    public void RestaurantOwnerSendMessageToDiscord(User user, Restaurant restaurant) {
+        log.info("Restaurant Owner Send Message To Discord");
+        TextChannel channel = jda.getTextChannelById(restaurantChannelId);
+        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new RestaurantMessage(user, restaurant));
+        channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
+
+    }
+    public void AiFailSendMessageToDiscord(Long userId, String category, String categoryId, String reason, String errorMessage) {
+        log.info("AI Failed Send Message To Discord");
+        TextChannel channel = jda.getTextChannelById(aiChannelId);
+        MessageEmbed buildEmbedReportMessage = DiscordMessageConverter.buildReportMessage(new AiFailMessage(userId, category, categoryId, reason,errorMessage));
+        channel.sendMessageEmbeds(buildEmbedReportMessage).queue();
+    }
 
 }
 

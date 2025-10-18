@@ -28,8 +28,8 @@ public class CategoryService {
     // 카테고리 등록
     @Transactional
     public void createCategory(User user, CategoryRequestDto requestDto) {
-//        validateUser(user);
-        if (categoryRepository.existsByName(requestDto.name())) {
+        validateUser(user);
+        if (categoryRepository.existsByNameAndDeletedAtNull(requestDto.name())) {
             throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
         Category category = CategoryMapper.toCategory(requestDto);
@@ -39,11 +39,11 @@ public class CategoryService {
     // 카테고리 수정
     @Transactional
     public void editCategory(User user, UUID categoryId, CategoryRequestDto requestDto) {
-//        validateUser(user);
+        validateUser(user);
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        if (categoryRepository.existsByNameAndIdNot(requestDto.name(), categoryId)) {
+        if (categoryRepository.existsByNameAndIdNotAndDeletedAtNull(requestDto.name(), categoryId)) {
             throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
 
@@ -53,7 +53,7 @@ public class CategoryService {
     // 카테고리 삭제
     @Transactional
     public void deleteCategory(User user, UUID categoryId) {
-//        validateUser(user);
+        validateUser(user);
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
         category.delete(user.getId());
@@ -78,7 +78,7 @@ public class CategoryService {
     // 사용자 권한 검증 (Admin 사용자만 카테고리 CUD 가능)
     private void validateUser(User user) {
         if (!user.getRole().equals(Role.ADMIN)) {
-            throw new BusinessException(ErrorCode.ROLE_AUTHORIZATION_REQUIRED);
+            throw new BusinessException(ErrorCode.NOT_ADMIN);
         }
     }
 }

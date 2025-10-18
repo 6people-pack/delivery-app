@@ -3,6 +3,7 @@ package com.sparta.delivery.ai.controller;
 import com.sparta.delivery.ai.dto.*;
 import com.sparta.delivery.ai.service.AiApiService;
 import com.sparta.delivery.ai.service.AiPromptService;
+import com.sparta.delivery.ai.service.AiService;
 import com.sparta.delivery.global.unit.common.BaseResponse;
 import com.sparta.delivery.global.unit.common.BaseStatus;
 import com.sparta.delivery.security.userdetails.UserDetailsImpl;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AiApiController {
     private final AiApiService aiApiService;
+    private final AiService aiService;
     private final AiPromptService aiPromptService;
 
     //ai요청 내용을 키워드로 받는 api, 원래는 front 영역
@@ -27,8 +29,9 @@ public class AiApiController {
 
     //ai에게 질문 요청api, 원래 front가 있으면 이 api가 있는게 맞음
     @PostMapping
-    public BaseResponse<AiSimpleResponseDto> askQuestion (@RequestBody @Valid AiRequestDto requestDto) {
-        return BaseResponse.ok(aiApiService.getAnswerFromAi(requestDto.getQuestion()), BaseStatus.CREATED);
+    public BaseResponse<AiSimpleResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                          @RequestBody @Valid AiRequestDto requestDto) {
+        return BaseResponse.ok(aiApiService.generateAiAnswer(userDetails.getUser().getId(), requestDto.getCategory(), requestDto.getCategoryId(),requestDto.getQuestion()), BaseStatus.CREATED);
     }
 
     //ai가 답변한 내용 전체 조회
@@ -38,14 +41,14 @@ public class AiApiController {
                                                       @RequestParam(required = false) String startday,
                                                       @RequestParam(required = false) String endday,
                                                       @RequestParam(required = false) String word) {
-        return BaseResponse.ok(aiApiService.getAllChats(userDetails.getUser().getId(),startday, endday,word), BaseStatus.OK);
+        return BaseResponse.ok(aiService.getAllChats(userDetails.getUser().getId(),startday, endday,word), BaseStatus.OK);
     }
 
     //ai가 답변한 내용 단건 조회
     @GetMapping("/{aiId}")
     public BaseResponse<AiResponseDto> getChat(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                @PathVariable("aiId") String aiId) {
-        return BaseResponse.ok(aiApiService.getChat(userDetails.getUser().getId(),aiId), BaseStatus.OK);
+        return BaseResponse.ok(aiService.getChat(userDetails.getUser().getId(),aiId), BaseStatus.OK);
     }
 
 }

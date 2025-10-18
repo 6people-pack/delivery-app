@@ -1,21 +1,26 @@
 package com.sparta.delivery.menu.service;
 
+import com.sparta.delivery.global.category.ImageCategory;
+import com.sparta.delivery.global.exception.BusinessException;
+import com.sparta.delivery.global.exception.domain.ErrorCode;
+import com.sparta.delivery.image.service.ImageService;
 import com.sparta.delivery.menu.domain.Menu;
 import com.sparta.delivery.menu.dto.MenuCreateRequestDto;
-import com.sparta.delivery.menu.dto.MenuUpdateRequestDto;
 import com.sparta.delivery.menu.dto.MenuResponseDto;
+import com.sparta.delivery.menu.dto.MenuUpdateRequestDto;
 import com.sparta.delivery.menu.mapper.MenuMapper;
 import com.sparta.delivery.menu.repository.MenuRepository;
-import com.sparta.delivery.restaurant.domain.Restaurant;
+import com.sparta.delivery.restaurant.repository.RestaurantRepository;
+import com.sparta.delivery.user.domain.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,15 +29,23 @@ public class MenuService {
 
     private final MenuRepository menuRepository;
     private final MenuMapper menuMapper;
+    private final ImageService imageService;
+    private final RestaurantRepository restaurantRepository;
 
     @PersistenceContext
     private EntityManager em;
 
-    public MenuResponseDto create(MenuCreateRequestDto req) {
+    public MenuResponseDto create(MenuCreateRequestDto req, User user, List<MultipartFile> menuImages) {
         // 식당 프록시 참조 (ID만으로 참조)
 //        Restaurant restaurantRef = em.getReference(Restaurant.class, req.restaurantId());
+
+        // 해당 사용자가 식당 주인인지 검증
+        if (!restaurantRepository.existsByIdAndOwnerIdAndDeletedAtIsNull(req.restaurantId(), user.getId())) throw new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND);
+
         Menu menu = menuMapper.toEntity(req, req.restaurantId());
         Menu saved = menuRepository.save(menu);
+        imageService.uploadImage(ImageCategory.menu, saved.getId(), menuImages);
+
         return menuMapper.toResponse(saved);
     }
 
@@ -63,11 +76,10 @@ public class MenuService {
         return menuMapper.toResponse(menu);
     }
 
-    public void delete(UUID menuId) {
-        if (!menuRepository.existsById(menuId)) {
-            throw new IllegalArgumentException("Menu not found: " + menuId);
-        }
-        menuRepository.deleteById(menuId);
+    public void delete(User user, UUID menuId) {
+        Menu menu = find(menuId);
+        menu.delete(user.getId()); // Soft Delete 적용
+        imageService.deleteImageFolder(ImageCategory.menu, menuId);
     }
 
     private Menu find(UUID id) {
