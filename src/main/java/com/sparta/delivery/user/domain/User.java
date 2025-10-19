@@ -64,6 +64,9 @@ public class User extends BaseEntity {
     // 리프레시 토큰 변경 메서드
     public void updateRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
 
+    // 리프레시 토큰 삭제 메서드
+    public void deleteRefreshToken() { this.refreshToken = null; }
+
     // 권한 변경 메서드
     public void updateRole(Role role) {
         this.role = role;

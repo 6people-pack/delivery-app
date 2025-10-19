@@ -177,7 +177,7 @@ public class UserService {
         User findUser = userRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        findUser.updateRefreshToken(null);
+        findUser.deleteRefreshToken();
         findUser.delete(user.getId());
         userRepository.save(findUser);
     }
