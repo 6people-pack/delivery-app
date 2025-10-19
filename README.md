@@ -181,28 +181,46 @@ GEMINI_API_KEY=your_gemini_api_key
 
 #### 2️⃣ Ollama 설치 및 모델 다운로드
 
-고객센터 AI 답변기능은 **로컬 LLM 실행 환경인 Ollama**를 통해 동작합니다.  
+AI 기능 중 일부(고객센터 AI 답변)는 **로컬 LLM 실행 환경인 Ollama**를 통해 동작합니다.  
 아래 과정을 순서대로 따라 설치를 완료하세요.
 
 ##### 🪄 1. Ollama 설치
-[https://ollama.com](https://ollama.com) 에 접속하여  
-운영체제(Windows, macOS, Linux)에 맞는 버전을 다운로드합니다.
+터미널을 열고 아래 명령어를 입력하여 Ollama를 설치합니다:
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+🔹 위 명령은 운영체제에 맞는 Ollama 설치 스크립트를 자동으로 실행합니다.
 
 ##### ⚙️ 2. 모델 다운로드
-터미널(또는 명령 프롬프트)을 실행한 뒤 아래 명령어를 입력하여 모델을 다운로드합니다:
+설치가 완료되면 아래 명령어를 입력하여 모델을 다운로드합니다:
 
 ```bash
 ollama pull qwen2.5:1.5b
 ```
 
-##### ✅ 3. 설치 확인
-아래 명령어를 터미널에 입력해 Ollama가 정상적으로 응답하는지 확인하세요:
+🔹 Qwen2.5:1.5b 모델을 로컬 환경에 다운로드합니다.
 
+##### 🚀 3. Ollama 실행 및 동작 확인
+
+① **Ollama 서버 실행 (백그라운드 구동)**
+```bash
+nohup ollama serve > ollama.log 2>&1 &
+```
+🔸 Ollama 서버를 백그라운드에서 실행하며, 로그는 `ollama.log` 파일에 저장됩니다.
+
+② **프로세스 확인**
+```bash
+ps aux | grep ollama
+```
+🔸 `ollama serve` 프로세스가 표시되면 서버가 정상 실행 중입니다.
+
+③ **응답 테스트 (모델 응답 확인)**
 ```bash
 curl http://localhost:11434/api/generate -d "{ \"model\": \"qwen2.5:1.5b\", \"prompt\": \"한국어로 대답해줘. 너는 어떤 모델이야?\", \"stream\": false }"
 ```
-
-➡️ 응답으로 모델의 정보나 한국어 답변이 출력된다면 **Ollama 설치가 완료된 것입니다.**
+🔸 한국어 응답이 정상적으로 출력된다면 **Ollama 설치 및 모델 설정이 완료된 것입니다.**
 
 > 💡 Ollama는 네트워크 연결 없이도 로컬에서 LLM을 실행할 수 있는 환경으로,  
 > 고객센터의 AI 자동 답변 기능에 활용됩니다.
