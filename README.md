@@ -28,6 +28,8 @@
 
 > 🔗 **API 문서:** [Postman API Docs 바로가기](https://documenter.getpostman.com/view/33876991/2sB3QQJ7nr)
 
+> 🗺️ **와이어프레임:** [Figma Wireframe 바로가기](https://claude.ai/public/artifacts/51118bc4-52e3-418a-b7dd-3481101043ba)
+
 ---
 
 ## ⚙️ 시스템 구성 (System Overview)
