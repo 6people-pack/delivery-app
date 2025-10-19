@@ -19,11 +19,6 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/test") //스프링 시큐리티 인증 테스트
-    public String loginTest(){
-        return "login test";
-    }
-
     // 회원 가입
     @PostMapping("/signup")
     public BaseResponse<Void> signup(@RequestBody @Valid SignUpRequestDto signUpRequestDto) {
@@ -51,53 +46,25 @@ public class UserController {
 
     // 로그아웃
     @PostMapping("/logout")
-    public BaseResponse<Void> logout(HttpServletResponse response) {
-        userService.logout(response);
+    public BaseResponse<Void> logout(
+            HttpServletRequest request) {
+
+        userService.logout(request);
         return BaseResponse.ok(BaseStatus.OK); //200
     }
 
-    // 핸드폰 번호 변경
-    @PatchMapping("/me/updatePhoneNumber")
-    public BaseResponse<Void> updatePhoneNumber(
+    // 내 정보 변경
+    @PatchMapping("/update")
+    public BaseResponse<Void> update(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody UpdatePhoneNumberRequestDto dto) {
+            @RequestBody @Valid UpdateRequestDto dto) {
 
-        userService.updatePhoneNumber(userDetails.getUser(), dto);
-        return BaseResponse.ok(BaseStatus.OK);
-    }
-
-    // 닉네임 변경
-    @PatchMapping("/me/updateNickname")
-    public BaseResponse<Void> updateNickname(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody UpdateNicknameRequestDto dto) {
-
-        userService.updateNickname(userDetails.getUser(), dto);
-        return BaseResponse.ok(BaseStatus.OK);
-    }
-
-    // 현재 비밀번호 확인
-    @PatchMapping("/me/verifyPassword")
-    public BaseResponse<Void> verifyPassword(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody VerifyPasswordRequestDto dto) {
-
-        userService.verifyPassword(userDetails.getUser(), dto);
-        return BaseResponse.ok(BaseStatus.OK);
-    }
-
-    // 비밀번호 변경
-    @PatchMapping("/me/updatePassword")
-    public BaseResponse<Void> updatePassword(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody UpdatePasswordRequestDto dto) {
-
-        userService.updatePassword(userDetails.getUser(), dto);
+        userService.update(userDetails.getUser(), dto);
         return BaseResponse.ok(BaseStatus.OK);
     }
 
     // 회원 탈퇴
-    @PatchMapping("/me/withdrawal")
+    @PatchMapping("/withdrawal")
     public BaseResponse<Void> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         userService.withdraw(userDetails.getUser());
         return BaseResponse.ok(BaseStatus.OK);
