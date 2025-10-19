@@ -22,14 +22,14 @@ public class AiApiController {
 
     //ai요청 내용을 키워드로 받는 api, 원래는 front 영역
     @PostMapping("/keywords")
-    public BaseResponse<AiSimpleResponseDto> askKeywordQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
+    public BaseResponse<AiAnswerResponseDto> askKeywordQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                                    @RequestBody @Valid AiKeywordsRequestDto requestDto) {
         return BaseResponse.ok(aiPromptService.GetAiWithKeywords(userDetails.getUser().getId(),requestDto), BaseStatus.CREATED);
     }
 
     //ai에게 질문 요청api, 원래 front가 있으면 이 api가 있는게 맞음
     @PostMapping
-    public BaseResponse<AiSimpleResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
+    public BaseResponse<AiAnswerResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                           @RequestBody @Valid AiRequestDto requestDto) {
         return BaseResponse.ok(aiApiService.generateAiAnswer(userDetails.getUser().getId(), requestDto.category(), requestDto.categoryId(),requestDto.question()), BaseStatus.CREATED);
     }

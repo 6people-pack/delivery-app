@@ -49,16 +49,19 @@ public class AiService {
         BooleanBuilder builder  = new BooleanBuilder();
         QAi ai = QAi.ai;
 
+        //검색 시작일
         if(StringUtils.hasText(startday)) {
             LocalDateTime sDay = LocalDateTime.of(LocalDate.parse(startday), LocalTime.of(0,0,0));
             builder.and(ai.createdAt.goe(sDay));
         }
 
+        //검색 종료일
         if(StringUtils.hasText(endday)) {
             LocalDateTime eDay = LocalDateTime.of(LocalDate.parse(endday), LocalTime.of(23,59,59));
             builder.and(ai.createdAt.loe(eDay));
         }
 
+        //넣을 키워드
         if(StringUtils.hasText(word)) {
             builder.and(ai.answer.contains(word));
         }
