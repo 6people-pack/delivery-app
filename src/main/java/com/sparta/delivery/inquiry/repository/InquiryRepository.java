@@ -18,6 +18,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, UUID> {
     Optional<Inquiry> findByIdAndUser(@Param("inquiryId") UUID inquiryId, @Param("userId") Long userId);
 
 
-    @Query("select i from Inquiry i where i.id < :cursor or :cursor IS NULL ORDER BY i.id DESC")
+    @Query("select i from Inquiry i where i.id < :cursor or :cursor IS NULL ORDER BY i.createdAt DESC")
     Slice<Inquiry> findByCursor(@Param("cursor") Long cursor, PageRequest of);
 }
