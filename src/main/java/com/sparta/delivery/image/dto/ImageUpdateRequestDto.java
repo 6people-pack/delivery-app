@@ -1,15 +1,15 @@
 package com.sparta.delivery.image.dto;
 
-import lombok.Getter;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
+import java.util.UUID;
 
-@Getter
-public class ImageUpdateRequestDto {
-    private String category;
-    private String categoryId;
-    private List<ImageCDto> create;
-    private List<ImageDDto> delete;
-    private List<ImageUDto> update;
+public record ImageUpdateRequestDto(@NotBlank String category,
+                                    @NotNull UUID categoryId,
+                                    List<ImageCDto> create,
+                                    List<ImageDDto> delete,
+                                    List<ImageUDto> update) {
 }
 

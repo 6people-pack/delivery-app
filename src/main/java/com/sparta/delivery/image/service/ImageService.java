@@ -49,47 +49,50 @@ public class ImageService {
 
     //이미지 다건 조회 - 권한 체크 x
     @Transactional(readOnly = true)
-    public ImageMultiResponseDto getAllImage( String category, String categoryid) {
+    public ImageMultiResponseDto getAllImage( String category, UUID categoryId) {
         //해당 카테고리의 객체가 있는지 확인
-        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(ImageCategory.valueOf(category), UUID.fromString(categoryid));
+        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(ImageCategory.valueOf(category), categoryId);
         if(images.isEmpty()) {
-            if(ImageCategory.valueOf(category) == ImageCategory.review) return new ImageMultiResponseDto(category, categoryid, new ArrayList<>());
-            else return new ImageMultiResponseDto(category, categoryid, List.of(new ImageSimpleResponseDto("resources/static/no_food.png",1)));
+            if(ImageCategory.valueOf(category) == ImageCategory.review) return new ImageMultiResponseDto(category, categoryId, new ArrayList<>());
+            else return new ImageMultiResponseDto(category, categoryId, List.of(new ImageSimpleResponseDto("resources/static/no_food.png",1)));
         }
         List<ImageSimpleResponseDto> imageList = images.stream()
                 .map(image -> new ImageSimpleResponseDto(image.getUrl(), image.getIndex()))
                 .toList();
-        return new ImageMultiResponseDto(category, categoryid, imageList);
+        return new ImageMultiResponseDto(category, categoryId, imageList);
     }
 
     //이미지 다건 수정
     @Transactional
     public ImageMultiResponseDto updateAllImage(Long userId, ImageUpdateRequestDto requestDto , List<MultipartFile> files) {
-        ImageCategory imageCategory = ImageCategory.valueOf(requestDto.getCategory());
-        UUID categoryid = UUID.fromString(requestDto.getCategoryId());
+        ImageCategory imageCategory = ImageCategory.valueOf(requestDto.category());
+        UUID categoryId = requestDto.categoryId();
 
         //권한 체크
-        categoryCheck.checkAuthority(userId, imageCategory, categoryid);
+        categoryCheck.checkAuthority(userId, imageCategory, categoryId);
 
         //기존에 남아있는 이미지와 새로 업로드할 이미지의 합이 10개를 넘지 않는지 확인
-        if(requestDto.getUpdate().size() + requestDto.getCreate().size() > MAX_IMAGE_COUNT)
+        if(requestDto.update().size() + requestDto.create().size() > MAX_IMAGE_COUNT)
             throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
 
+        if(imageRepository.countByCategoryAndCategoryId(imageCategory, categoryId)-requestDto.delete().size()!=requestDto.update().size())
+            throw new BusinessException(ErrorCode.ORINIAL_IMAGE_COUNT_MISMATCH);
+
         //이미지 삭제
-        deleteImages(requestDto.getDelete());
+        deleteImages(requestDto.delete());
 
         //기존 이미지 인덱스 수정
-        updateImages(requestDto.getUpdate());
+        updateImages(requestDto.update());
 
         //새로운 이미지 업로드
-        createImages(requestDto.getCreate(), files, imageCategory, categoryid);
+        createImages(requestDto.create(), files, imageCategory, categoryId);
 
         //인덱스 맞는지 확인
-        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(imageCategory, categoryid);
+        List<Image> images = imageRepository.findAllByCategoryAndCategoryIdOrderByIndexAsc(imageCategory, categoryId);
         for (int i = 0; i < images.size(); i++) {
             if (images.get(i).getIndex() != i + 1) throw new BusinessException(ErrorCode.NOT_SEQUENTIAL_INDEX);
         }
-        return new ImageMultiResponseDto(imageCategory.toString(), categoryid.toString(),
+        return new ImageMultiResponseDto(imageCategory.toString(), categoryId,
                 images.stream().map(image -> new ImageSimpleResponseDto(image.getUrl(), image.getIndex())).toList());
     }
 

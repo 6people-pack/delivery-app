@@ -20,6 +20,7 @@ public enum ErrorCode {
     NOT_SEQUENTIAL_INDEX(HttpStatus.BAD_REQUEST,"이미지 인덱스가 맞지 않습니다"),
     MISMATCHED_IMAGE_COUNT(HttpStatus.BAD_REQUEST,"받아온 이미지 개수와 인덱스 개수가 맞지 않습니다." ),
     NO_USE_CATEGORY(HttpStatus.BAD_REQUEST, "해당 카테고리는 지원하지 않는 컨텐츠입니다."),
+    ORINIAL_IMAGE_COUNT_MISMATCH(HttpStatus.BAD_REQUEST,"요청의 기존의 이미지 개수 맞지 않습니다." ),
     BLACKLIST_TOKEN(HttpStatus.BAD_REQUEST, "블랙리스트 토큰으로 시도한 접근입니다."),
         //비번 변경 시
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 비밀번호입니다."),

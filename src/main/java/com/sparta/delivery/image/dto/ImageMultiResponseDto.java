@@ -1,18 +1,10 @@
 package com.sparta.delivery.image.dto;
 
-import lombok.Getter;
-
 import java.util.List;
+import java.util.UUID;
 
-@Getter
-public class ImageMultiResponseDto {
-    private String category;
-    private String categoryId;
-    private List<ImageSimpleResponseDto> images;
-
-    public ImageMultiResponseDto(String category, String categoryId, List<ImageSimpleResponseDto> images) {
-        this.category = category;
-        this.categoryId = categoryId;
-        this.images = images;
-    }
+public record ImageMultiResponseDto(
+        String category,
+        UUID categoryId,
+        List<ImageSimpleResponseDto> images) {
 }
