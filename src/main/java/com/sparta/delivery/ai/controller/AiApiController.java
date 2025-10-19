@@ -31,7 +31,7 @@ public class AiApiController {
     @PostMapping
     public BaseResponse<AiSimpleResponseDto> askQuestion (@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                           @RequestBody @Valid AiRequestDto requestDto) {
-        return BaseResponse.ok(aiApiService.generateAiAnswer(userDetails.getUser().getId(), requestDto.getCategory(), requestDto.getCategoryId(),requestDto.getQuestion()), BaseStatus.CREATED);
+        return BaseResponse.ok(aiApiService.generateAiAnswer(userDetails.getUser().getId(), requestDto.category(), requestDto.categoryId(),requestDto.question()), BaseStatus.CREATED);
     }
 
     //ai가 답변한 내용 전체 조회
