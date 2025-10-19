@@ -41,6 +41,7 @@ public class RestaurantMapper {
                 .openTime(restaurant.getOpenTime())
                 .closeTime(restaurant.getCloseTime())
                 .rating(restaurant.getRating())
+                .approvalStatus(restaurant.getApprovalStatus())
                 .build();
     }
 

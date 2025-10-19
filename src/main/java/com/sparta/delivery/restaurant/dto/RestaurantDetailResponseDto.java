@@ -1,5 +1,6 @@
 package com.sparta.delivery.restaurant.dto;
 
+import com.sparta.delivery.restaurant.domain.ApprovalStatus;
 import lombok.Builder;
 
 import java.time.LocalTime;
@@ -18,6 +19,7 @@ public record RestaurantDetailResponseDto(
         Boolean isOpen,
         LocalTime openTime,
         LocalTime closeTime,
-        Double rating
+        Double rating,
+        ApprovalStatus approvalStatus
 ) {
 }

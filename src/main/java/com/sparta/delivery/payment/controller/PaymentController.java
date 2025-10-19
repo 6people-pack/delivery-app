@@ -7,10 +7,12 @@ import com.sparta.delivery.payment.dto.TossPaymentConfirmRequest;
 import com.sparta.delivery.payment.dto.TossPaymentFailLogRequest;
 import com.sparta.delivery.payment.service.PaymentAuditService;
 import com.sparta.delivery.payment.service.PaymentService;
+import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,19 +30,24 @@ public class PaymentController {
 	private final PaymentService paymentService;
 	private final PaymentAuditService paymentAuditService;
 
+    // 프론트에서 orderId, paymentKey 받아서 들어오는 결재 요청 컨트롤러
 	@ResponseStatus(HttpStatus.OK)
 	@PostMapping("/confirm")
 	public BaseResponse<PaymentSuccessResponse> confirm(
-		@RequestBody @Valid TossPaymentConfirmRequest request) {
-		PaymentSuccessResponse response = paymentService.confirmPayment(request);
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody @Valid TossPaymentConfirmRequest request) {
+
+		PaymentSuccessResponse response = paymentService.confirmPayment(userDetails.getUser(), request);
 		return BaseResponse.ok(response, BaseStatus.CREATED);
 	}
 
 	@PostMapping("/fail")
 	@ResponseStatus(HttpStatus.OK)
-	public void fail(@RequestBody TossPaymentFailLogRequest req) {
+	public void fail(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody TossPaymentFailLogRequest req) {
 		log.info("[FAIL API] orderId={}, amount={}, message={}", req.orderId(), req.amount(), req.message());
-		paymentAuditService.recordFailure(req.amount(), req.orderId(), req.message());
+		paymentAuditService.recordFailure(userDetails.getUser(), req.amount(), req.orderId(), req.message());
 	}
 
 	@PostMapping("/ping")

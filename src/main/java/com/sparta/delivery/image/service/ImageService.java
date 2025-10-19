@@ -32,6 +32,8 @@ public class ImageService {
 
     //이미지 최초 업로드(다수 가능)
     public void uploadImage(ImageCategory imageCategory, UUID categoryId, List<MultipartFile> files) {
+        if (files.size() == 1 && files.get(0).isEmpty()) return;
+
         //이미지는 한 폴더당 10개 제한
         if(files.size() > MAX_IMAGE_COUNT) throw new BusinessException(ErrorCode.IMAGE_MAX_COUNT);
 
