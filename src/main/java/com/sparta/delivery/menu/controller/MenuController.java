@@ -4,10 +4,13 @@ import com.sparta.delivery.menu.dto.MenuCreateRequestDto;
 import com.sparta.delivery.menu.dto.MenuResponseDto;
 import com.sparta.delivery.menu.dto.MenuUpdateRequestDto;
 import com.sparta.delivery.menu.service.MenuService;
+import com.sparta.delivery.security.userdetails.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -22,8 +25,10 @@ public class MenuController {
 
     // POST /api/menus
     @PostMapping("/menus")
-    public ResponseEntity<MenuResponseDto> create(@RequestBody @Valid MenuCreateRequestDto req) {
-        MenuResponseDto created = menuService.create(req);
+    public ResponseEntity<MenuResponseDto> create(@Valid @RequestPart("menuInfo") MenuCreateRequestDto req,
+                                                  @AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                  @RequestPart("menuImage") List<MultipartFile> menuImages) {
+        MenuResponseDto created = menuService.create(req, userDetails.getUser(), menuImages);
         return ResponseEntity.created(URI.create("/api/menus/" + created.id())).body(created);
     }
 
@@ -48,8 +53,9 @@ public class MenuController {
 
     // DELETE /api/menus/{menuId}
     @DeleteMapping("/menus/{menuId}")
-    public ResponseEntity<Void> delete(@PathVariable UUID menuId) {
-        menuService.delete(menuId);
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID menuId) {
+        menuService.delete(userDetails.getUser(), menuId);
         return ResponseEntity.noContent().build();
     }
 }

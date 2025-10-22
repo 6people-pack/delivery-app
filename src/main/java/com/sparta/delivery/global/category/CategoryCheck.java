@@ -11,11 +11,13 @@ import com.sparta.delivery.review.repository.ReviewRepository;
 import com.sparta.delivery.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoryCheck {
 
     private final UserRepository userRepository;

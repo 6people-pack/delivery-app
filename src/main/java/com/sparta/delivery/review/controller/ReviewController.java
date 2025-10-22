@@ -9,14 +9,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.function.EntityResponse;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -26,9 +26,10 @@ public class ReviewController {
 
     @PostMapping("/reviews")
     public ReviewResponseDto create(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                    @Valid @RequestBody ReviewCreateRequestDto req) {
-        requireUser(userDetails.getUser().getId());
-        return reviewService.create(userDetails.getUser(), req);
+                                    @Valid @RequestPart("reviewInfo") ReviewCreateRequestDto req,
+                                    @RequestPart("reviewImage") List<MultipartFile> reviewImages) {
+       requireUser(userDetails.getUser().getId());
+        return reviewService.create(userDetails.getUser(), req, reviewImages);
     }
 
     @GetMapping("/reviews/{reviewId}")

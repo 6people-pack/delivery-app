@@ -13,7 +13,6 @@ import com.sparta.delivery.menu.domain.MenuStatus;
 import com.sparta.delivery.menu.repository.MenuRepository;
 import com.sparta.delivery.restaurant.repository.RestaurantRepository;
 import com.sparta.delivery.user.domain.User;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,10 +31,10 @@ public class CartItemService {
 
     // 장바구니 메뉴 추가
     @Transactional
-    public void addCartItem(User user, @Valid AddCartItemRequestDto dto) {
-        List<CartItem> findCartItems = cartItemRepository.findByUserId(user.getId());
+    public void addCartItem(User user, AddCartItemRequestDto dto) {
+
         // 장바구니의 첫번째 메뉴 확인, 비었으면 null
-        CartItem firstItem = findCartItems.stream().findFirst().orElse(null);
+        CartItem firstItem = cartItemRepository.findFirstByUserIdOrderByIdAsc(user.getId()).orElse(null);
 
         Menu menu = menuRepository.findById(dto.menuId()).orElseThrow(
                 () -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
@@ -54,6 +53,7 @@ public class CartItemService {
                 throw new BusinessException(ErrorCode.DIFFERENT_RESTAURANT); // 재요청
             }
             if (dto.override()) {   // 재요청 후 덮어쓰기 확인 시
+                List<CartItem> findCartItems = cartItemRepository.findByUserId(user.getId());
                 findCartItems.forEach(item -> item.delete(user.getId()));
             } else if (!dto.override()) {
                 return;
@@ -84,7 +84,7 @@ public class CartItemService {
 
     // 장바구니 메뉴 수량 변경
     @Transactional
-    public void updateCartItemQuantity(User user, @Valid updateCartItemQuantityRequestDto dto) {
+    public void updateCartItemQuantity(User user, updateCartItemQuantityRequestDto dto) {
         CartItem cartItem = cartItemRepository.findByIdAndUserId(dto.cartItemId(), user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND)); // 선택한 메뉴가 db에 없을 때
 
@@ -110,7 +110,7 @@ public class CartItemService {
 
     // 메뉴 옵션 변경
     @Transactional
-    public void updateCartItemOption(User user, @Valid updateCartItemOptionRequestDto dto) {
+    public void updateCartItemOption(User user, updateCartItemOptionRequestDto dto) {
         CartItem cartItem = cartItemRepository.findByIdAndUserId(dto.cartItemId(), user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
 

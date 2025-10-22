@@ -20,18 +20,22 @@ public enum ErrorCode {
     NOT_SEQUENTIAL_INDEX(HttpStatus.BAD_REQUEST,"이미지 인덱스가 맞지 않습니다"),
     MISMATCHED_IMAGE_COUNT(HttpStatus.BAD_REQUEST,"받아온 이미지 개수와 인덱스 개수가 맞지 않습니다." ),
     NO_USE_CATEGORY(HttpStatus.BAD_REQUEST, "해당 카테고리는 지원하지 않는 컨텐츠입니다."),
+    ORINIAL_IMAGE_COUNT_MISMATCH(HttpStatus.BAD_REQUEST,"요청의 기존의 이미지 개수 맞지 않습니다." ),
+    BLACKLIST_TOKEN(HttpStatus.BAD_REQUEST, "블랙리스트 토큰으로 시도한 접근입니다."),
+        //비번 변경 시
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 비밀번호입니다."),
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "기존과 동일한 비밀번호입니다."),
 
-    //tosspay
+        //tosspay
     ZERO_AMOUNT_PAYMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "0원 결제는 허용되지 않습니다."),
     INVALID_MENU_STATUS(HttpStatus.BAD_REQUEST, "판매 중인 메뉴가 아닙니다."),
     DIFFERENT_RESTAURANT(HttpStatus.BAD_REQUEST, "장바구니에 다른 음식점 메뉴가 존재합니다."),
     INVALID_ORDER_ACCESS(HttpStatus.BAD_REQUEST, "사용자와 주문의 정보가 일치하지 않습니다."),
     ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "조리가 시작된 주문은 취소할 수 없습니다."),
+    OWNER_ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "완료된 주문은 취소할 수 없습니다."),
 
     // 401
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "인증이 필요한 요청입니다. 로그인 해주세요."),
-    // 비번 변경 시
-    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다. 다시 시도 해주세요."),
     ROLE_AUTHORIZATION_REQUIRED(HttpStatus.UNAUTHORIZED, "권한이 필요한 요청입니다."),
     NOT_OWNER(HttpStatus.UNAUTHORIZED,"해당 식당의 주인만이 이용 가능합니다." ),
     NOT_REVIEWER(HttpStatus.UNAUTHORIZED,"해당 리뷰의 작성자만이 이용 가능합니다." ),
@@ -53,7 +57,6 @@ public enum ErrorCode {
     NOT_ADMIN(HttpStatus.UNAUTHORIZED,"관리자만이 이용 가능합니다." ),
 
     // 404 Not Found
-    LOGIN_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "로그인 정보와 일치하는 사용자가 존재하지 않습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자가 존재하지 않습니다."),
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 주문이 존재하지 않습니다."),
     NOT_FIND_INQUIRY(HttpStatus.NOT_FOUND, "문의 정보가 존재하지 않습니다."),
@@ -68,12 +71,14 @@ public enum ErrorCode {
     NICKNAME_ALREADY_EXISTS(HttpStatus.NOT_FOUND, "해당 닉네임은 이미 존재합니다."),
     RESTAURANT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 식당입니다."),
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 카테고리입니다"),
+//    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND,"존재하지 않는 리뷰입니다." ),
     S3_FOLDER_NO_FILE(HttpStatus.NOT_FOUND, "S3 폴더에 파일이 존재하지 않습니다."),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장바구니 메뉴입니다."),
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 메뉴입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "리프레시 토큰이 존재하지 않습니다."),
 
     // 409 Conflict
+//    NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임은 이미 존재합니다."),
     BUSINESS_CODE_EXISTS(HttpStatus.CONFLICT, "존재하는 사업자 번호 입니다."),
     CATEGORY_NAME_EXISTS(HttpStatus.CONFLICT, "존재하는 카테고리 이름 입니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "존재하는 이메일 입니다.");

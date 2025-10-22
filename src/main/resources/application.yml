@@ -102,3 +102,5 @@ resilience4j:
 
         # 호출 1건당 토큰 1개 소비가 되는데 limit-for-period: 10 가 10이니 리필 주기마다 토큰 10개까 채워짐
         # limit-refresh-period: 1s로 도어 매 1초마다 10개 충전된다. 만약 500ms 안에 토큰을 못 받으면 RequestNotPermitted 예외로 실패
+gemini:
+  api-key: ${GEMINI_API_KEY}
