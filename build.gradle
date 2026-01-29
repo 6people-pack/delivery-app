@@ -75,10 +75,10 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 
-    implementation 'io.github.resilience4j:resilience4j-timelimiter'
-    implementation 'io.github.resilience4j:resilience4j-retry'
-    implementation 'io.github.resilience4j:resilience4j-circuitbreaker'
-    implementation 'io.github.resilience4j:resilience4j-ratelimiter'
+//    implementation 'io.github.resilience4j:resilience4j-timelimiter'
+//    implementation 'io.github.resilience4j:resilience4j-retry'
+//    implementation 'io.github.resilience4j:resilience4j-circuitbreaker'
+//    implementation 'io.github.resilience4j:resilience4j-ratelimiter'
 
     implementation('net.dv8tion:JDA:5.0.0-beta.20') {
         exclude module: 'opus-java'
