@@ -51,7 +51,7 @@ public class recoverDlq {
 
                 if (retryCount >= MAX_ATTEMPTS) {
                     dlqMessage.updateDlqStatus(DlqStatus.FAILED); // 그냥 실패로 처리하고 더는 재처리 하지 않음
-                    // TODO 관리자에게 알림
+                    // TODO 관리자에게 알림 추가 예정
                 }
                 else {
                     dlqMessage.updateDlqStatus(DlqStatus.PENDING);

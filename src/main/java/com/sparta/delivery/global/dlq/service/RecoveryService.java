@@ -29,5 +29,4 @@ public class RecoveryService {
         // 기존 AI 답변 로직 재실행
         aiResponder.aiAnswerComment(user, inquiry);
     }
-
 }
